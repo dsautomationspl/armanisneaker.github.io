@@ -124,6 +124,34 @@
         let talents = [];
         let filteredTalents = [];
 
+        // Simple CSV line parser (handles quoted fields with commas inside)
+        function parseCSVLine(line) {
+            const values = [];
+            let current = '';
+            let inQuote = false;
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                if (char === '"' && !inQuote) {
+                    inQuote = true;
+                } else if (char === '"' && inQuote) {
+                    if (i + 1 < line.length && line[i + 1] === '"') {
+                        // Escaped quote (if any, but assuming none for simplicity)
+                        current += '"';
+                        i++;
+                    } else {
+                        inQuote = false;
+                    }
+                } else if (char === ',' && !inQuote) {
+                    values.push(current.trim());
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            values.push(current.trim());
+            return values;
+        }
+
         // Load the CSV file
         async function loadTalents() {
             try {
@@ -131,22 +159,20 @@
                 if (!response.ok) throw new Error('Could not load talents.csv');
                 const csvText = await response.text();
 
-                // Parse CSV (one talent per line, fields separated by |)
-                talents = csvText
-                    .trim()
-                    .split('\n')
-                    .map(line => {
-                        const [name, tier, activation, ranked, description, source] = line.split('|');
-                        return {
-                            name: name?.trim() || '',
-                            tier: parseInt(tier) || 1,
-                            activation: activation?.trim() || '',
-                            ranked: ranked?.trim() || '',
-                            description: description?.trim() || '',
-                            source: source?.trim() || ''
-                        };
-                    })
-                    .filter(t => t.name); // remove any empty lines
+                // Parse CSV
+                const lines = csvText.trim().split('\n');
+                // Skip header line
+                talents = lines.slice(1).map(line => {
+                    const [name, tier, activation, ranked, description, source] = parseCSVLine(line);
+                    return {
+                        name: name || '',
+                        tier: parseInt(tier) || 1,
+                        activation: activation || '',
+                        ranked: ranked || '',
+                        description: description || '',
+                        source: source || ''
+                    };
+                }).filter(t => t.name); // remove any empty lines
 
                 filteredTalents = [...talents];
                 renderTalents();
