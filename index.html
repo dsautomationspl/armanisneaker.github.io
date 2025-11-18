@@ -241,6 +241,9 @@
                     shouldSort: true
                 });
 
+                // Set total count
+                document.getElementById('totalCount').textContent = talents.length;
+
                 // Build tag bar
                 buildTagBar();
                 applyFilters();
