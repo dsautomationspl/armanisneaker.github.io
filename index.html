@@ -321,28 +321,23 @@
                         <div class="talent-source" style="display: none;"></div>
                         <label class="active-label" style="display: none;"><input type="checkbox"> Active?</label>
                     `;
-                    slot.addEventListener('click', openSearchForSlot);
+                    slot.addEventListener('click', (e) => openSearchForSlot(e.currentTarget));
                     row.appendChild(slot);
                 }
                 pyramid.appendChild(row);
             }
         }
-        function openSearchForSlot(e) {
-            const slot = e.currentTarget;
+        function openSearchForSlot(slot) {
             pendingSlot = slot;
             const tier = rowTiers[slot.dataset.row];
             document.getElementById('tierFilter').value = tier.toString();
-            applyFilters();
+            document.getElementById('tierFilter').dispatchEvent(new Event('change'));
             switchToReference();
         }
         function assignTalentToSlot(talent) {
             if (!pendingSlot) return;
             const row = pendingSlot.dataset.row;
             const slotIndex = pendingSlot.dataset.slot;
-            if (pyramidTalents[row][slotIndex]) {
-                // If already assigned, check if changing
-                if (pyramidTalents[row][slotIndex].name === talent.name) return;
-            }
             const temp = pyramidTalents[row][slotIndex];
             pyramidTalents[row][slotIndex] = talent;
             if (!validatePyramid()) {
