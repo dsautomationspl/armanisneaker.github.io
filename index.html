@@ -371,9 +371,9 @@
                     }
                 });
             });
-            // Check pyramid rule: #tier1 > #tier2 > #tier3 > #tier4 > #tier5
+            // Check pyramid rule: tier5 <= tier4 <= tier3 <= tier2 <= tier1
             for (let k = 1; k <= 4; k++) {
-                if (counts[k] <= counts[k + 1]) return false;
+                if (counts[k + 1] > counts[k]) return false;
             }
             // Check non-ranked duplicates
             for (const name in nameCounts) {
