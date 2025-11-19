@@ -69,7 +69,7 @@
         .builder-header h2 { font-size: 2em; color: #2d3748; margin-bottom: 10px; }
         .builder-header p { color: #718096; font-size: 1.1em; }
         .pyramid-row { display: flex; justify-content: center; margin-bottom: 20px; gap: 15px; }
-        .pyramid-slot { width: 220px; border: 2px solid #e2e8f0; border-radius: 12px; padding: 20px; background: white; position: relative; transition: all 0.3s; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .pyramid-slot { width: 220px; border: 2px solid #e2e8f0; border-radius: 12px; padding: 20px; background: white; position: relative; transition: all 0.3s; box-shadow: 0 4px 12px rgba(0,0,0,0.08); cursor: pointer; }
         .pyramid-slot:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); border-color: #667eea; }
         .pyramid-slot::before { content: ''; position: absolute; top: 0; left: 0; width: 6px; height: 100%; background: var(--tier-color); border-radius: 12px 0 0 12px; }
         .pyramid-slot.tier-1 { --tier-color: #48bb78; }
@@ -77,16 +77,32 @@
         .pyramid-slot.tier-3 { --tier-color: #9f7aea; }
         .pyramid-slot.tier-4 { --tier-color: #ed8936; }
         .pyramid-slot.tier-5 { --tier-color: #f56565; }
-        .pyramid-slot label { display: block; font-weight: 600; margin-bottom: 5px; color: #4a5568; }
-        .pyramid-slot select { width: 100%; padding: 10px 12px; border: 2px solid #cbd5e0; border-radius: 8px; margin-bottom: 10px; font-size: 14px; background: white; transition: all 0.3s; }
-        .pyramid-slot select:hover { border-color: #667eea; }
-        .pyramid-slot select:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.1); }
-        .pyramid-slot .active-label { font-size: 13px; color: #4a5568; font-weight: 600; display: flex; align-items: center; gap: 8px; margin-top: 12px; cursor: pointer; }
+        .pyramid-slot .slot-tier { font-size: 12px; font-weight: bold; color: var(--tier-color); text-transform: uppercase; margin-bottom: 10px; }
+        .pyramid-slot .slot-talent-name { font-size: 16px; font-weight: 600; color: #2d3748; min-height: 48px; display: flex; align-items: center; justify-content: center; text-align: center; }
+        .pyramid-slot .slot-talent-name.empty { color: #a0aec0; font-style: italic; font-weight: 400; }
+        .pyramid-slot .active-label { font-size: 13px; color: #4a5568; font-weight: 600; display: flex; align-items: center; gap: 8px; margin-top: 12px; cursor: pointer; justify-content: center; }
         .pyramid-slot .active-label input[type="checkbox"] { cursor: pointer; width: 18px; height: 18px; }
-        .pyramid-slot .description { font-size: 13px; color: #4a5568; margin-top: 12px; line-height: 1.6; display: none; background: #f7fafc; padding: 12px; border-radius: 8px; border-left: 3px solid var(--tier-color); }
+        .pyramid-slot .remove-btn { position: absolute; top: 8px; right: 8px; background: #e53e3e; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; font-size: 16px; cursor: pointer; display: none; align-items: center; justify-content: center; transition: all 0.2s; }
+        .pyramid-slot .remove-btn:hover { background: #c53030; transform: scale(1.1); }
+        .pyramid-slot.has-talent .remove-btn { display: flex; }
+
+        /* Modal Styles */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background: white; border-radius: 12px; max-width: 1400px; width: 100%; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+        .modal-header { background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%); color: white; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h2 { font-size: 1.8em; }
+        .modal-close { background: transparent; border: 2px solid white; color: white; padding: 8px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s; }
+        .modal-close:hover { background: white; color: #2d3748; }
+        .modal-controls { background: #f7fafc; padding: 20px 30px; border-bottom: 2px solid #e2e8f0; }
+        .modal-body { padding: 30px; overflow-y: auto; flex: 1; }
+
         .talent-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 22px; }
         .talent-card { background: white; border: 2px solid #e2e8f0; border-radius: 12px; padding: 22px; transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
         .talent-card:hover { transform: translateY(-6px); box-shadow: 0 12px 30px rgba(0,0,0,0.2); border-color: #667eea; }
+        .talent-card.selectable { cursor: pointer; }
+        .talent-card.selectable:hover { border-color: #48bb78; }
+        .talent-card.selected { border-color: #48bb78; background: #f0fff4; }
         .talent-card::before { content: ''; position: absolute; top: 0; left: 0; width: 6px; height: 100%; background: var(--tier-color); }
         .tier-1 { --tier-color: #48bb78; }
         .tier-2 { --tier-color: #4299e1; }
@@ -112,6 +128,7 @@
             .filter-group { width: 100%; }
             .pyramid-row { flex-direction: column; align-items: center; }
             .pyramid-slot { width: 100%; max-width: 400px; margin: 10px 0; }
+            .modal-content { max-height: 95vh; }
         }
     </style>
 </head>
@@ -171,11 +188,52 @@
         </div>
     </div>
 
+    <!-- Modal for Talent Selection -->
+    <div class="modal-overlay" id="talentModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Select Talent</h2>
+                <button class="modal-close" id="modalClose">Close</button>
+            </div>
+            <div class="modal-controls">
+                <div class="search-bar">
+                    <input type="text" id="modalSearchInput" placeholder="Search talents..." autocomplete="off">
+                </div>
+                <div class="filters">
+                    <div class="filter-group">
+                        <label>Activation</label>
+                        <select id="modalActivationFilter">
+                            <option value="all">All</option><option value="passive">Passive</option><option value="active">Active</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Ranked</label>
+                        <select id="modalRankedFilter">
+                            <option value="all">All</option><option value="yes">Yes</option><option value="no">No</option>
+                        </select>
+                    </div>
+                    <button id="modalResetBtn">Reset</button>
+                </div>
+                <div class="tag-filter-bar" id="modalTagBar"></div>
+                <div class="stats">
+                    <div class="stat-card"><div class="number" id="modalShownCount">0</div><div class="label">Shown</div></div>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div id="modalTalentGrid" class="talent-grid"></div>
+            </div>
+        </div>
+    </div>
+
     <script>
         let talents = [];
         let fuse;
         let talentsByTier = Array(6).fill().map(() => []);
         const activeTags = new Set();
+        const modalActiveTags = new Set();
+        let currentSlot = null;
+        let currentModalTier = null;
+        let pyramidData = []; // Store pyramid state
 
         const tagDefinitions = [
             { name: "combat", color: "tag-combat", keywords: ["attack", "damage", "hit", "melee", "ranged", "brawl", "weapon", "combat check", "deadly", "lethal"] },
@@ -246,6 +304,7 @@
                 document.getElementById('totalCount').textContent = talents.length;
 
                 buildTagBar();
+                buildModalTagBar();
                 applyFilters();
                 buildPyramid();
             } catch (err) {
@@ -266,8 +325,21 @@
             });
         }
 
+        function buildModalTagBar() {
+            const bar = document.getElementById('modalTagBar');
+            bar.innerHTML = '';
+            tagDefinitions.forEach(def => {
+                const btn = document.createElement('button');
+                btn.className = `tag-btn ${def.color}`;
+                btn.textContent = def.name.charAt(0).toUpperCase() + def.name.slice(1);
+                btn.dataset.tag = def.name;
+                btn.onclick = () => toggleModalTag(def.name);
+                bar.appendChild(btn);
+            });
+        }
+
         function toggleTag(tagName) {
-            const btn = document.querySelector(`.tag-btn[data-tag="${tagName}"]`);
+            const btn = document.querySelector(`#tagBar .tag-btn[data-tag="${tagName}"]`);
             if (activeTags.has(tagName)) {
                 activeTags.delete(tagName);
                 btn.classList.remove('active');
@@ -276,6 +348,18 @@
                 btn.classList.add('active');
             }
             applyFilters();
+        }
+
+        function toggleModalTag(tagName) {
+            const btn = document.querySelector(`#modalTagBar .tag-btn[data-tag="${tagName}"]`);
+            if (modalActiveTags.has(tagName)) {
+                modalActiveTags.delete(tagName);
+                btn.classList.remove('active');
+            } else {
+                modalActiveTags.add(tagName);
+                btn.classList.add('active');
+            }
+            applyModalFilters();
         }
 
         function applyFilters() {
@@ -297,6 +381,28 @@
 
             renderTalents(results);
             document.getElementById('tagCount').textContent = activeTags.size;
+        }
+
+        function applyModalFilters() {
+            let results = talentsByTier[currentModalTier] || [];
+            const query = document.getElementById('modalSearchInput').value.trim();
+            
+            if (query) {
+                const modalFuse = new Fuse(results, { keys: ['name', 'description'], threshold: 0.35, includeScore: true, shouldSort: true });
+                results = modalFuse.search(query).map(r => r.item);
+            }
+
+            const act = document.getElementById('modalActivationFilter').value.toLowerCase();
+            const ranked = document.getElementById('modalRankedFilter').value.toLowerCase();
+
+            results = results.filter(t => {
+                const matchAct = act === 'all' || t.activation.toLowerCase().includes(act);
+                const matchRanked = ranked === 'all' || t.ranked.toLowerCase() === ranked;
+                const matchTags = modalActiveTags.size === 0 || t.tags.some(tag => modalActiveTags.has(tag.name));
+                return matchAct && matchRanked && matchTags;
+            });
+
+            renderModalTalents(results);
         }
 
         function renderTalents(list) {
@@ -328,140 +434,13 @@
             document.getElementById('shownCount').textContent = list.length;
         }
 
-        // Talent Tree Builder
-        const rowTiers = [5, 4, 3, 2, 1]; // Top row Tier 5, bottom Tier 1
-        const rowSlots = [1, 2, 3, 4, 5]; // Top 1 slot, bottom 5 slots
-
-        function buildPyramid() {
-            const pyramid = document.getElementById('pyramid');
-            pyramid.innerHTML = '<div class="builder-header"><h2>Talent Tree Builder</h2><p>Build your character\'s talent pyramid following tier progression rules</p></div>';
-            for (let r = 0; r < 5; r++) {
-                const row = document.createElement('div');
-                row.className = 'pyramid-row';
-                const tier = rowTiers[r];
-                for (let s = 0; s < rowSlots[r]; s++) {
-                    const slot = document.createElement('div');
-                    slot.className = `pyramid-slot tier-${tier}`;
-
-                    const select = document.createElement('select');
-                    select.dataset.oldValue = '';
-                    select.addEventListener('focus', (e) => e.target.dataset.oldValue = e.target.value);
-                    select.addEventListener('change', handleTalentChange);
-                    const optEmpty = document.createElement('option');
-                    optEmpty.value = '';
-                    optEmpty.text = '-- Select Talent --';
-                    select.add(optEmpty);
-                    talentsByTier[tier].forEach(t => {
-                        const opt = document.createElement('option');
-                        opt.value = t.name;
-                        opt.text = t.name + (t.ranked === 'Yes' ? ' (Ranked)' : '');
-                        select.add(opt);
-                    });
-                    slot.appendChild(select);
-
-                    const desc = document.createElement('p');
-                    desc.className = 'description';
-                    slot.appendChild(desc);
-
-                    const activeChk = document.createElement('input');
-                    activeChk.type = 'checkbox';
-                    activeChk.id = `active-${r}-${s}`;
-                    const activeLabel = document.createElement('label');
-                    activeLabel.className = 'active-label';
-                    activeLabel.htmlFor = `active-${r}-${s}`;
-                    activeLabel.innerHTML = '<span>Active?</span>';
-                    activeLabel.insertBefore(activeChk, activeLabel.firstChild);
-                    slot.appendChild(activeLabel);
-
-                    row.appendChild(slot);
-                }
-                pyramid.appendChild(row);
-            }
-        }
-
-        function handleTalentChange(e) {
-            const select = e.target;
-            const newValue = select.value;
-            const talent = talents.find(t => t.name === newValue);
-            const desc = select.nextSibling;
-            if (talent) {
-                desc.textContent = talent.description;
-                desc.style.display = 'block';
-            } else {
-                desc.textContent = '';
-                desc.style.display = 'none';
-            }
-
-            if (!validatePyramid()) {
-                alert('Invalid selection! Violates talent pyramid rules (higher tier cannot have more talents than lower tier) or non-ranked duplicate.');
-                select.value = select.dataset.oldValue;
+        function renderModalTalents(list) {
+            const grid = document.getElementById('modalTalentGrid');
+            if (list.length === 0) {
+                grid.innerHTML = `<div class="no-results"><h2>No talents found</h2><p>Try different filters or search terms</p></div>`;
+                document.getElementById('modalShownCount').textContent = 0;
                 return;
             }
-            select.dataset.oldValue = newValue;
-        }
 
-        function validatePyramid() {
-            const counts = [0, 0, 0, 0, 0, 0]; // Index 1 for Tier 1 (bottom), 5 for Tier 5 (top)
-            const nameCounts = {};
-            document.querySelectorAll('#pyramid select').forEach(sel => {
-                const value = sel.value;
-                if (value !== '') {
-                    const row = sel.closest('.pyramid-row');
-                    const r = Array.from(document.querySelectorAll('.pyramid-row')).indexOf(row);
-                    const tier = rowTiers[r];
-                    counts[tier]++;
-                    nameCounts[value] = (nameCounts[value] || 0) + 1;
-                }
-            });
-
-            // Check pyramid rule: counts[5] <= counts[4] <= counts[3] <= counts[2] <= counts[1]
-            for (let k = 1; k <= 4; k++) {
-                if (counts[k + 1] > counts[k]) return false;
-            }
-
-            // Check non-ranked duplicates
-            for (const name in nameCounts) {
-                const talent = talents.find(t => t.name === name);
-                if (talent && talent.ranked === 'No' && nameCounts[name] > 1) return false;
-            }
-
-            return true;
-        }
-
-        // Switch between reference and builder
-        document.getElementById('builderBtn').addEventListener('click', () => {
-            const reference = document.getElementById('referenceContent');
-            const controls = document.querySelector('.controls');
-            const builder = document.getElementById('builder');
-            const btn = document.getElementById('builderBtn');
-            if (builder.style.display === 'none') {
-                reference.style.display = 'none';
-                controls.style.display = 'none';
-                builder.style.display = 'block';
-                btn.textContent = 'Back to Reference';
-            } else {
-                reference.style.display = 'block';
-                controls.style.display = 'block';
-                builder.style.display = 'none';
-                btn.textContent = 'Build Talent Tree';
-            }
-        });
-
-        document.getElementById('searchInput').addEventListener('input', applyFilters);
-        document.getElementById('tierFilter').addEventListener('change', applyFilters);
-        document.getElementById('activationFilter').addEventListener('change', applyFilters);
-        document.getElementById('rankedFilter').addEventListener('change', applyFilters);
-        document.getElementById('resetBtn').addEventListener('click', () => {
-            document.getElementById('searchInput').value = '';
-            document.getElementById('tierFilter').value = 'all';
-            document.getElementById('activationFilter').value = 'all';
-            document.getElementById('rankedFilter').value = 'all';
-            activeTags.clear();
-            document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active'));
-            applyFilters();
-        });
-
-        loadTalents();
-    </script>
-</body>
-</html>
+            grid.innerHTML = list.map(t => `
+                <div class="talent-card tier-${t
