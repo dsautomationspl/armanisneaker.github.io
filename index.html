@@ -153,7 +153,7 @@
         let talentsByTier = Array(6).fill().map(() => []);
         const activeTags = new Set();
         let pendingSlot = null;
-        const pyramidTalents = Array.from({length: 5}, () => Array(5).fill(null));
+        const pyramidTalents = Array.from({length: 5}, () => Array(10).fill(null));
         const rowTiers = [5, 4, 3, 2, 1];
         const tagDefinitions = [
             { name: "combat", color: "tag-combat", keywords: ["attack", "damage", "hit", "melee", "ranged", "brawl", "weapon", "combat check", "deadly", "lethal"] },
