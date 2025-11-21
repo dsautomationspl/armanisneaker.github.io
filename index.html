@@ -291,7 +291,9 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 2px solid transparent;
+            border: 2px solid var(--color-border-light);
+            background: transparent;
+            color: var(--color-text-secondary);
             position: relative;
             overflow: hidden;
         }
@@ -303,7 +305,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+            background: linear-gradient(135deg, rgba(255,255,255,0.05), transparent);
             opacity: 0;
             transition: opacity 0.2s ease;
         }
@@ -315,26 +317,78 @@
         .tag-pill:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            border-color: var(--tag-border-color);
+            color: var(--tag-text-color);
         }
         
         .tag-pill.active {
-            border-color: rgba(255,255,255,0.3);
-            box-shadow: 0 0 20px currentColor;
+            border-color: var(--tag-border-color);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--tag-text-color);
+            box-shadow: 0 0 20px var(--tag-glow-color);
             transform: scale(1.05);
         }
         
-        .tag-combat { background: linear-gradient(135deg, #dc2626, #991b1b); }
-        .tag-defense { background: linear-gradient(135deg, #2563eb, #1e40af); }
-        .tag-healing { background: linear-gradient(135deg, #059669, #047857); }
-        .tag-social { background: linear-gradient(135deg, #d97706, #b45309); }
-        .tag-vehicle { background: linear-gradient(135deg, #9333ea, #7e22ce); }
-        .tag-magic { background: linear-gradient(135deg, #c026d3, #a21caf); }
-        .tag-fear { background: linear-gradient(135deg, #4f46e5, #4338ca); }
-        .tag-knowledge { background: linear-gradient(135deg, #0d9488, #0f766e); }
-        .tag-movement { background: linear-gradient(135deg, #ea580c, #c2410c); }
-        .tag-strain { background: linear-gradient(135deg, #475569, #334155); }
-        .tag-critical { background: linear-gradient(135deg, #7f1d1d, #450a0a); }
-        .tag-leadership { background: linear-gradient(135deg, #0891b2, #0e7490); }
+        .tag-combat { 
+            --tag-border-color: #dc2626; 
+            --tag-text-color: #fca5a5;
+            --tag-glow-color: rgba(220, 38, 38, 0.3);
+        }
+        .tag-defense { 
+            --tag-border-color: #2563eb; 
+            --tag-text-color: #93c5fd;
+            --tag-glow-color: rgba(37, 99, 235, 0.3);
+        }
+        .tag-healing { 
+            --tag-border-color: #059669; 
+            --tag-text-color: #6ee7b7;
+            --tag-glow-color: rgba(5, 150, 105, 0.3);
+        }
+        .tag-social { 
+            --tag-border-color: #d97706; 
+            --tag-text-color: #fcd34d;
+            --tag-glow-color: rgba(217, 119, 6, 0.3);
+        }
+        .tag-vehicle { 
+            --tag-border-color: #9333ea; 
+            --tag-text-color: #d8b4fe;
+            --tag-glow-color: rgba(147, 51, 234, 0.3);
+        }
+        .tag-magic { 
+            --tag-border-color: #c026d3; 
+            --tag-text-color: #f0abfc;
+            --tag-glow-color: rgba(192, 38, 211, 0.3);
+        }
+        .tag-fear { 
+            --tag-border-color: #4f46e5; 
+            --tag-text-color: #c7d2fe;
+            --tag-glow-color: rgba(79, 70, 229, 0.3);
+        }
+        .tag-knowledge { 
+            --tag-border-color: #0d9488; 
+            --tag-text-color: #5eead4;
+            --tag-glow-color: rgba(13, 148, 136, 0.3);
+        }
+        .tag-movement { 
+            --tag-border-color: #ea580c; 
+            --tag-text-color: #fdba74;
+            --tag-glow-color: rgba(234, 88, 12, 0.3);
+        }
+        .tag-strain { 
+            --tag-border-color: #475569; 
+            --tag-text-color: #cbd5e1;
+            --tag-glow-color: rgba(71, 85, 105, 0.3);
+        }
+        .tag-critical { 
+            --tag-border-color: #7f1d1d; 
+            --tag-text-color: #fca5a5;
+            --tag-glow-color: rgba(127, 29, 29, 0.3);
+        }
+        .tag-leadership { 
+            --tag-border-color: #0891b2; 
+            --tag-text-color: #67e8f9;
+            --tag-glow-color: rgba(8, 145, 178, 0.3);
+        }
         
         /* Stats Cards */
         .stats-grid {
@@ -818,9 +872,149 @@
         ::-webkit-scrollbar-thumb:hover {
             background: var(--color-primary);
         }
+        
+        /* Notification Toast */
+        #notification-container {
+            position: fixed;
+            top: var(--spacing-lg);
+            right: var(--spacing-lg);
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+            pointer-events: none;
+        }
+        
+        .notification {
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(20px);
+            border: 2px solid;
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            min-width: 300px;
+            max-width: 500px;
+            box-shadow: var(--shadow-xl);
+            animation: slideIn 0.3s ease-out;
+            pointer-events: auto;
+            display: flex;
+            align-items: flex-start;
+            gap: var(--spacing-md);
+        }
+        
+        .notification.error {
+            border-color: var(--tier-5-color);
+            box-shadow: 0 0 30px rgba(239, 68, 68, 0.3);
+        }
+        
+        .notification.success {
+            border-color: var(--tier-1-color);
+            box-shadow: 0 0 30px rgba(16, 185, 129, 0.3);
+        }
+        
+        .notification.info {
+            border-color: var(--color-primary);
+            box-shadow: 0 0 30px rgba(99, 102, 241, 0.3);
+        }
+        
+        .notification-icon {
+            flex-shrink: 0;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+        
+        .notification.error .notification-icon {
+            background: var(--tier-5-color);
+            color: white;
+        }
+        
+        .notification.success .notification-icon {
+            background: var(--tier-1-color);
+            color: white;
+        }
+        
+        .notification.info .notification-icon {
+            background: var(--color-primary);
+            color: white;
+        }
+        
+        .notification-content {
+            flex: 1;
+            color: var(--color-text);
+            font-size: 0.938rem;
+            line-height: 1.5;
+        }
+        
+        .notification-close {
+            flex-shrink: 0;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: var(--color-text-secondary);
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            font-size: 1.25rem;
+            line-height: 1;
+        }
+        
+        .notification-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: var(--color-text);
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+        
+        .notification.removing {
+            animation: slideOut 0.3s ease-out forwards;
+        }
+        
+        @media (max-width: 768px) {
+            #notification-container {
+                top: var(--spacing-md);
+                right: var(--spacing-md);
+                left: var(--spacing-md);
+            }
+            
+            .notification {
+                min-width: 0;
+                max-width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
+    <div id="notification-container"></div>
+    
     <div class="container">
         <header>
             <h1>Genesys Talents</h1>
@@ -969,6 +1163,37 @@
                 { name: "critical", color: "tag-critical", keywords: ["critical", "vicious", "deadly accuracy", "lethal blows"] },
                 { name: "leadership", color: "tag-leadership", keywords: ["leadership", "command", "field commander", "inspiring"] }
             ];
+            
+            // Notification System
+            function showNotification(message, type = 'info') {
+                const container = document.getElementById('notification-container');
+                const notification = document.createElement('div');
+                notification.className = `notification ${type}`;
+                
+                const iconMap = {
+                    error: '✕',
+                    success: '✓',
+                    info: 'i'
+                };
+                
+                notification.innerHTML = `
+                    <div class="notification-icon">${iconMap[type]}</div>
+                    <div class="notification-content">${message}</div>
+                    <button class="notification-close">×</button>
+                `;
+                
+                container.appendChild(notification);
+                
+                const closeBtn = notification.querySelector('.notification-close');
+                closeBtn.addEventListener('click', () => removeNotification(notification));
+                
+                setTimeout(() => removeNotification(notification), 5000);
+            }
+            
+            function removeNotification(notification) {
+                notification.classList.add('removing');
+                setTimeout(() => notification.remove(), 300);
+            }
 
             function generateTagsForTalent(talent) {
                 const text = (talent.name + " " + talent.description).toLowerCase();
@@ -1217,12 +1442,20 @@
 
                 const row = parseInt(pendingSlot.dataset.row);
                 const slotIndex = parseInt(pendingSlot.dataset.slot);
+                const slotTier = rowTiers[row];
+                
+                // Check if talent tier matches slot tier
+                if (talent.tier !== slotTier) {
+                    showNotification(`Cannot add Tier ${talent.tier} talent to Tier ${slotTier} slot!`, 'error');
+                    return;
+                }
+                
                 const temp = pyramidTalents[row][slotIndex];
                 
                 pyramidTalents[row][slotIndex] = {...talent, active: temp?.active || false};
 
                 if (!validatePyramid()) {
-                    alert('Invalid selection! This violates talent pyramid rules or adds a non-ranked duplicate.');
+                    showNotification('Invalid selection! This violates talent pyramid rules or adds a non-ranked duplicate.', 'error');
                     pyramidTalents[row][slotIndex] = temp;
                     if (pendingSlot) pendingSlot.classList.remove('selected-slot');
                     pendingSlot = null;
