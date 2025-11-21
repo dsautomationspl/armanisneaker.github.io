@@ -572,7 +572,7 @@
 
         const GEMINI_API_KEY = "AIzaSyBDqTM2lMKdT6Khz6RdJmdLwYdDt898vj0"; // ←←← PUT YOUR GOOGLE AI STUDIO API KEY HERE
 
-        // === CHATBOT SCRIPT (updated with full talent knowledge) ===
+       // === CHATBOT SCRIPT — NOW 100% AWARE OF THE CURRENT TALENT TREE ===
     const chatbotToggle = document.getElementById('chatbot-toggle');
     const chatbotWindow = document.getElementById('chatbot-window');
     const chatbotClose = document.getElementById('chatbot-close');
@@ -580,11 +580,32 @@
     const chatbotInput = document.getElementById('chatbot-input');
     const chatbotSend = document.getElementById('chatbot-send');
 
-    // Toggle open/close
-    chatbotToggle.addEventListener('click', () => {
-        chatbotWindow.style.display = chatbotWindow.style.display === 'flex' ? 'none' : 'flex';
-    });
-    chatbotClose.addEventListener('click', () => chatbotWindow.style.display = 'none');
+    let conversationHistory = [];
+
+    // Helper: get current pyramid state as clean text
+    function getCurrentPyramidText() {
+        const lines = [];
+        const rowNames = ["Tier 5", "Tier 4", "Tier 3", "Tier 2", "Tier 1"];
+
+        for (let r = 0; r < 5; r++) {
+            const tierName = rowNames[r];
+            const slots = [];
+            for (let s = 0; s < pyramidTalents[r].length; s++) {
+                const talent = pyramidTalents[r][s];
+                if (talent) {
+                    const active = document.querySelector(`.pyramid-slot[data-row="${r}"][data-slot="${s}"] .active-label input`)?.checked;
+                    slots.push(`${talent.name} (${active ? "Active" : "Passive"})`);
+                } else {
+                    slots.push("(empty)");
+                }
+            }
+            lines.push(`${tierName}: ${slots.join(" | ")}`);
+        }
+
+        const validity = validatePyramid() ? "VALID" : "INVALID (violates pyramid rules or duplicate non-ranked)";
+        lines.push(`\nPyramid status: ${validity}`);
+        return lines.join("\n");
+    }
 
     function addMessage(content, isUser = false) {
         const msgDiv = document.createElement('div');
@@ -594,24 +615,20 @@
         chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
     }
 
-    // Global variable to hold the conversation history for context
-    let conversationHistory = [];
-
     async function sendToGemini(userMessage = null) {
         if (!GEMINI_API_KEY || GEMINI_API_KEY === "YOUR_API_KEY_HERE") {
             addMessage("Error: Gemini API key missing!", false);
             return;
         }
 
-        // Build the payload
         const contents = [...conversationHistory];
         if (userMessage) {
-            contents.push({ role: "user", parts: [{ text: userMessage }] });
             addMessage(userMessage, true);
+            contents.push({ role: "user", parts: [{ text: userMessage }] });
         }
 
         addMessage("Thinking...", false);
-        const typingIndicator = chatbotMessages.lastElementChild;
+        const typing = chatbotMessages.lastElementChild;
 
         try {
             const response = await fetch(
@@ -621,101 +638,107 @@
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         contents,
-                        generationConfig: {
-                            temperature: 0.6,
-                            topP: 0.9,
-                            maxOutputTokens: 1500,
-                        }
+                        generationConfig: { temperature: 0.7, maxOutputTokens: 1500 }
                     })
                 }
             );
 
-            if (!response.ok) {
-                const err = await response.text();
-                throw new Error(`HTTP ${response.status} – ${err}`);
-            }
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
             const data = await response.json();
             const reply = data.candidates[0].content.parts[0].text;
 
-            typingIndicator.remove();
+            typing.remove();
             addMessage(reply, false);
 
-            // Save to history
-            if (userMessage) {
-                conversationHistory.push({ role: "user", parts: [{ text: userMessage }] });
-            }
+            if (userMessage) conversationHistory.push({ role: "user", parts: [{ text: userMessage }] });
             conversationHistory.push({ role: "model", parts: [{ text: reply }] });
-
-            // Keep history reasonable (max ~20 messages)
-            if (conversationHistory.length > 40) {
-                conversationHistory = conversationHistory.slice(-35);
-            }
+            if (conversationHistory.length > 40) conversationHistory = conversationHistory.slice(-35);
         } catch (err) {
-            typingIndicator.remove();
-            addMessage(`Error: ${err.message}. Check your API key or internet connection.`, false);
+            typing.remove();
+            addMessage(`Error: ${err.message}`, false);
             console.error(err);
         }
     }
 
-    // Send button & Enter key
+    // Send handling
     chatbotSend.addEventListener('click', () => {
         const text = chatbotInput.value.trim();
-        if (text) {
-            chatbotInput.value = '';
-            sendToGemini(text);
-        }
+        if (text) { chatbotInput.value = ''; sendToGemini(text); }
     });
     chatbotInput.addEventListener('keypress', e => e.key === 'Enter' && chatbotSend.click());
 
-    // ============================================================
-    // THIS IS THE MAGIC PART: Inject the full talent database + instructions
-    // ============================================================
-    document.addEventListener('DOMContentLoaded', async () => {
-        // Wait for talents to be fully loaded
-        if (typeof talents === 'undefined' || talents.length === 0) {
-            // If for some reason talents aren't ready yet, poll a few times
-            const waitForTalents = setInterval(() => {
-                if (typeof talents !== 'undefined' && talents.length > 0) {
-                    clearInterval(waitForTalents);
-                    injectTalentKnowledge();
-                }
-            }, 200);
-            setTimeout(() => clearInterval(waitForTalents), 10000); // safety timeout
-        } else {
-            injectTalentKnowledge();
-        }
+    // TOGGLE CHAT
+    chatbotToggle.onclick = () => chatbotWindow.style.display = chatbotWindow.style.display === 'flex' ? 'none' : 'flex';
+    chatbotClose.onclick = () => chatbotWindow.style.display = 'none';
 
-        function injectTalentKnowledge() {
-            // Format every talent exactly once
-            const talentLines = talents.map(t => 
-                `"${t.name}" (Tier ${t.tier}) — ${t.activation}, Ranked: ${t.ranked}\n${t.description.trim()}\nSource: ${t.source || 'Unknown'}\n---`
+    // FULL INITIALIZATION — TALENT DB + CURRENT PYRAMID + LIVE UPDATES
+    document.addEventListener('DOMContentLoaded', async () => {
+        // Wait until talents + pyramid are ready
+        const wait = setInterval(() => {
+            if (talents?.length && pyramidTalents) {
+                clearInterval(wait);
+                initializeAIWithFullKnowledge();
+            }
+        }, 200);
+
+        function initializeAIWithFullKnowledge() {
+            const allTalentsText = talents.map(t =>
+                `"${t.name}" (Tier ${t.tier}) — ${t.activation}, Ranked: ${t.ranked}\n${t.description}\nSource: ${t.source || 'Unknown'}\n---`
             ).join('\n');
 
-            const systemPrompt = `You are the ultimate Genesys RPG / Star Wars FFG talent expert.
-You have perfect knowledge of every single talent in this exact database (nothing else exists):
+            const currentPyramid = getCurrentPyramidText();
 
-${talentLines}
+            const systemPrompt = `You are the ultimate Genesys RPG talent & character builder assistant.
+You have two sources of truth:
 
-INSTRUCTIONS (never break these):
-- Always base your answers 100% on the talents above. Never invent or hallucinate talents.
-- When a user asks about a talent, quote its exact name, tier, activation, ranked status, full description, and source.
-- Recommend talents only from this list.
-- For pyramid building: remind that Tier 5 ≤ Tier 4 ≤ Tier 3 ≤ Tier 2 ≤ Tier 1 and non-ranked talents cannot be taken more than once.
-- Be concise, helpful, and enthusiastic.
-- If unsure or the talent doesn't exist in the list above, say: "That talent is not in the official Genesys/FFG database I have."`;
+1. COMPLETE TALENT DATABASE (never invent talents):
+${allTalentsText}
 
-            // Seed the conversation with the system prompt as the very first message
+2. CURRENT TALENT PYRAMID (always up to date):
+${currentPyramid}
+
+RULES:
+- Always reflect the exact current pyramid above when answering.
+- When the pyramid changes, you will receive an updated version automatically.
+- Validate pyramid: Tier 5 ≤ Tier 4 ≤ Tier 3 ≤ Tier 2 ≤ Tier 1 and no duplicate non-ranked talents.
+- Be extremely helpful with suggestions, comparisons, and build advice.
+- Answer concisely but completely. Use bullet points when helpful.
+
+You are now fully synchronized with the page. Ready!`;
+
             conversationHistory = [
-                { role: "user", parts: [{ text: "You are now the Genesys talent expert. Confirm you received the full talent database." }] },
-                { role: "model", parts: [{ text: "Yes! I have loaded all ${talents.length} talents from talents.csv and will only use this exact data. Ask me anything about talents, pyramid builds, or rules!" }] },
                 { role: "user", parts: [{ text: systemPrompt }] },
-                { role: "model", parts: [{ text: "Understood. I am now fully initialized as the Genesys Talent Oracle using only the real talent database. Ready!" }] }
+                { role: "model", parts: [{ text: "Perfect! I have the full talent list and I can see your current pyramid at all times. Ask me anything — build advice, validity checks, suggestions, etc.!" }] }
             ];
 
-            // Show the welcome message in the chat
-            addMessage("Hi! I know every single talent from your talents.csv (exactly " + talents.length + " talents). Ask me anything — pyramid builds, comparisons, rules questions… I’ll never make anything up!", false);
+            addMessage(`Genesys Assistant online!<br>I know all ${talents.length} talents and I can <strong>see your current Talent Tree live</strong>.<br><br>Try asking:<br>• “Show my current pyramid”<br>• “Can I add Dedication?”<br>• “Best Tier 3 combat talent to add next?”`, false);
         }
+
+        // LIVE UPDATE: Every time the pyramid changes, push the new state to the AI
+        const originalAssign = assignTalentToSlot;
+        assignTalentToSlot = function(talent) {
+            originalAssign(talent); // original behavior
+
+            // After any change → push updated pyramid to AI context
+            setTimeout(() => {
+                const updatedPyramid = getCurrentPyramidText();
+                const updateMsg = `PYRAMID UPDATE:\n${updatedPyramid}`;
+                conversationHistory.push({ role: "user", parts: [{ text: updateMsg }] });
+                conversationHistory.push({ role: "model", parts: [{ text: "Pyramid updated — I now see the new state." }] });
+            }, 300);
+        };
+
+        // Also watch the "Active/Passive" checkboxes
+        document.getElementById('pyramid')?.addEventListener('change', e => {
+            if (e.target.matches('.active-label input')) {
+                setTimeout(() => {
+                    const updatedPyramid = getCurrentPyramidText();
+                    conversationHistory.push({ role: "user", parts: [{ text: `PYRAMID UPDATE (active flag changed):\n${updatedPyramid}` }] });
+                    conversationHistory.push({ role: "model", parts: [{ text: "Active flags updated." }] });
+                }, 300);
+            }
+        });
     });
 
     // Original page load
