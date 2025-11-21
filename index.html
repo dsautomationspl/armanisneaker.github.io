@@ -4,23 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Genesys Talents Complete Reference</title>
+    <!-- Load Inter font for a modern feel -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Lucide icons for modern iconography -->
+    <script src="https://unpkg.com/lucide@latest"></script>
     <!-- Load Fuse.js for fuzzy searching -->
     <script src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0/dist/fuse.min.js"></script>
     
     <style>
-        /* Custom styles to define the tier colors using CSS variables (for the ::before pseudo-element) */
-        .tier-1 { --tier-color: #48bb78; }
-        .tier-2 { --tier-color: #4299e1; }
-        .tier-3 { --tier-color: #9f7aea; }
-        .tier-4 { --tier-color: #ed8936; }
-        .tier-5 { --tier-color: #f56565; }
+        /* Custom styles to define the tier colors using CSS variables */
+        .tier-1 { --tier-color: #10b981; } /* Emerald Green */
+        .tier-2 { --tier-color: #3b82f6; } /* Blue */
+        .tier-3 { --tier-color: #8b5cf6; } /* Violet */
+        .tier-4 { --tier-color: #f59e0b; } /* Amber */
+        .tier-5 { --tier-color: #ef4444; } /* Red */
         
         /* Custom background gradient for the body */
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1f2937 0%, #4b5563 100%); /* Darker, modern grey gradient */
         }
 
         /* Specific styles for the Talent Card / Pyramid Slot ::before decoration */
@@ -29,140 +33,170 @@
             position: absolute;
             top: 0;
             left: 0;
-            width: 6px;
+            width: 8px; /* Slightly thicker */
             height: 100%;
             background: var(--tier-color);
-            border-radius: 0.5rem 0 0 0.5rem; /* Match parent's rounded-xl */
+            border-radius: 0.75rem 0 0 0.75rem;
         }
 
-        /* Chatbot position fix for mobile */
-        @media (max-width: 768px) {
-            #chatbotContainer {
-                width: 90%;
-                right: 5%;
-                bottom: 10px;
-                height: 80%; /* Adjusted height for better mobile use */
-            }
-        }
-        
-        /* Scrollbar styling for a cleaner look */
+        /* Custom Scrollbar for modern look */
         .content::-webkit-scrollbar, #chatMessages::-webkit-scrollbar {
             width: 8px;
         }
         .content::-webkit-scrollbar-thumb, #chatMessages::-webkit-scrollbar-thumb {
-            background-color: #9ca3af;
+            background-color: #93c5fd; /* Blue 300 */
             border-radius: 4px;
+        }
+        .content::-webkit-scrollbar-track, #chatMessages::-webkit-scrollbar-track {
+            background-color: #e5e7eb; /* Gray 200 */
         }
     </style>
 </head>
-<body class="p-5">
+<body class="p-4 md:p-8">
 
     <!-- Error Modal UI (Replaces alert()) -->
-    <div id="modalOverlay" class="fixed inset-0 bg-gray-900 bg-opacity-75 hidden z-[1001] flex items-center justify-center">
-        <div class="bg-white p-8 rounded-xl shadow-2xl max-w-sm w-full transform transition-all duration-300 scale-95" id="modalBox">
-            <h3 class="text-xl font-bold text-red-600 mb-4" id="modalTitle">Validation Error</h3>
+    <div id="modalOverlay" class="fixed inset-0 bg-gray-900 bg-opacity-75 hidden z-[1001] flex items-center justify-center p-4">
+        <div class="bg-white p-6 rounded-2xl shadow-2xl max-w-sm w-full transform transition-all duration-300 scale-100 border-t-4 border-red-500" id="modalBox">
+            <h3 class="text-2xl font-bold text-red-600 mb-3" id="modalTitle">Error</h3>
             <p class="text-gray-700 mb-6" id="modalMessage">An error occurred.</p>
-            <button onclick="hideModal()" class="w-full bg-red-500 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-150 shadow-md">
-                Got It
+            <button onclick="hideModal()" class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-4 rounded-xl transition duration-150 shadow-lg hover:shadow-xl">
+                Acknowledge
             </button>
         </div>
     </div>
 
-    <div class="container mx-auto bg-white rounded-xl shadow-2xl overflow-hidden">
-        <header class="bg-gray-800 text-white p-8 text-center relative rounded-t-xl bg-gradient-to-br from-gray-900 to-gray-700">
-            <h1 class="text-4xl font-extrabold mb-2 text-shadow-lg">Genesys Talents Reference</h1>
-            <p class="text-lg opacity-80">Chwała Pierwszemu! A resource for character creation and reference.</p>
+    <div class="container mx-auto bg-white rounded-2xl shadow-2xl overflow-hidden">
+        <header class="bg-gray-800 text-white p-6 md:p-8 text-center relative rounded-t-2xl bg-gradient-to-br from-gray-900 to-gray-700">
+            <h1 class="text-3xl md:text-5xl font-extrabold mb-1 tracking-tight">Genesys Talents Reference</h1>
+            <p class="text-sm md:text-lg opacity-80">Chwała Pierwszemu! A resource for character creation and reference.</p>
             
-            <button id="builderBtn" class="absolute top-5 right-5 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white font-semibold rounded-lg shadow-md transition duration-200 z-10">
-                Build Talent Tree
-            </button>
-            <button id="chatbotToggleBtn" class="absolute top-16 right-5 px-4 py-2 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg shadow-md transition duration-200 z-10">
-                Open Chatbot 💬
-            </button>
+            <!-- Mobile-friendly button group -->
+            <div class="flex flex-wrap justify-center md:justify-end gap-3 mt-4 md:mt-0 md:absolute md:top-5 md:right-5">
+                <button id="builderBtn" class="flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-lg transition duration-200 text-sm md:text-base">
+                    <span data-lucide="pyramid" class="w-5 h-5 mr-2"></span>
+                    Talent Tree Builder
+                </button>
+                <button id="chatbotToggleBtn" class="flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl shadow-lg transition duration-200 text-sm md:text-base">
+                    <span data-lucide="bot" class="w-5 h-5 mr-2"></span>
+                    AI Assistant
+                </button>
+            </div>
         </header>
 
-        <div class="controls bg-gray-50 p-6 border-b border-gray-200">
+        <div class="controls bg-gray-50 p-4 md:p-6 border-b border-gray-200">
             <!-- Search -->
             <div class="flex flex-wrap gap-4 mb-5">
-                <input type="text" id="searchInput" placeholder="Fuzzy search: parry strain, dodge, full throttle, heal crit..." autocomplete="off"
-                       class="flex-1 min-w-[250px] p-3 border-2 border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150">
+                <div class="relative flex-1 min-w-[200px]">
+                    <span data-lucide="search" class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2"></span>
+                    <input type="text" id="searchInput" placeholder="Fuzzy search: parry strain, dodge, full throttle, heal crit..." autocomplete="off"
+                            class="w-full p-3 pl-10 border-2 border-gray-300 rounded-xl focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 shadow-inner">
+                </div>
             </div>
 
             <!-- Filters -->
             <div class="flex flex-wrap items-end gap-4 mb-4">
-                <div class="flex flex-col gap-1">
+                <div class="flex flex-col gap-1 w-full sm:w-auto">
                     <label class="text-xs font-semibold uppercase text-gray-600">Tier</label>
-                    <select id="tierFilter" class="p-2 border-2 border-gray-300 rounded-lg cursor-pointer transition duration-150 hover:border-indigo-500">
+                    <select id="tierFilter" class="p-3 border-2 border-gray-300 rounded-xl cursor-pointer transition duration-150 hover:border-indigo-500 bg-white shadow-sm">
                         <option value="all">All Tiers</option><option value="1">Tier 1</option><option value="2">Tier 2</option>
                         <option value="3">Tier 3</option><option value="4">Tier 4</option><option value="5">Tier 5</option>
                     </select>
                 </div>
-                <div class="flex flex-col gap-1">
+                <div class="flex flex-col gap-1 w-full sm:w-auto">
                     <label class="text-xs font-semibold uppercase text-gray-600">Activation</label>
-                    <select id="activationFilter" class="p-2 border-2 border-gray-300 rounded-lg cursor-pointer transition duration-150 hover:border-indigo-500">
+                    <select id="activationFilter" class="p-3 border-2 border-gray-300 rounded-xl cursor-pointer transition duration-150 hover:border-indigo-500 bg-white shadow-sm">
                         <option value="all">All</option><option value="passive">Passive</option><option value="active">Active</option>
                     </select>
                 </div>
-                <div class="flex flex-col gap-1">
+                <div class="flex flex-col gap-1 w-full sm:w-auto">
                     <label class="text-xs font-semibold uppercase text-gray-600">Ranked</label>
-                    <select id="rankedFilter" class="p-2 border-2 border-gray-300 rounded-lg cursor-pointer transition duration-150 hover:border-indigo-500">
+                    <select id="rankedFilter" class="p-3 border-2 border-gray-300 rounded-xl cursor-pointer transition duration-150 hover:border-indigo-500 bg-white shadow-sm">
                         <option value="all">All</option><option value="yes">Yes</option><option value="no">No</option>
                     </select>
                 </div>
-                <button id="resetBtn" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition duration-150 shadow-md">Reset All</button>
+                <button id="resetBtn" class="flex items-center justify-center w-full sm:w-auto px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition duration-150 shadow-md">
+                    <span data-lucide="rotate-ccw" class="w-5 h-5 mr-2"></span>
+                    Reset All
+                </button>
             </div>
             
             <!-- Tag Filters -->
-            <div class="tag-filter-bar flex flex-wrap gap-2 mb-5" id="tagBar"></div>
+            <div class="tag-filter-bar flex flex-wrap gap-2 mb-5 pt-3 border-t border-gray-100" id="tagBar"></div>
             
             <!-- Stats -->
-            <div class="flex gap-4 flex-wrap">
-                <div class="stat-card bg-white p-4 rounded-lg border-l-4 border-indigo-500 shadow-md">
-                    <div class="text-2xl font-bold text-indigo-500" id="totalCount">0</div>
+            <div class="grid grid-cols-3 gap-4 pt-3 border-t border-gray-100">
+                <div class="stat-card bg-white p-4 rounded-xl border-l-4 border-indigo-500 shadow-lg">
+                    <div class="text-2xl font-bold text-indigo-600" id="totalCount">0</div>
                     <div class="text-xs text-gray-500 uppercase mt-1">Total Talents</div>
                 </div>
-                <div class="stat-card bg-white p-4 rounded-lg border-l-4 border-indigo-500 shadow-md">
-                    <div class="text-2xl font-bold text-indigo-500" id="shownCount">0</div>
-                    <div class="text-xs text-gray-500 uppercase mt-1">Filtered Talents</div>
+                <div class="stat-card bg-white p-4 rounded-xl border-l-4 border-indigo-500 shadow-lg">
+                    <div class="text-2xl font-bold text-indigo-600" id="shownCount">0</div>
+                    <div class="text-xs text-gray-500 uppercase mt-1">Filtered</div>
                 </div>
-                <div class="stat-card bg-white p-4 rounded-lg border-l-4 border-indigo-500 shadow-md">
-                    <div class="text-2xl font-bold text-indigo-500" id="tagCount">0</div>
+                <div class="stat-card bg-white p-4 rounded-xl border-l-4 border-indigo-500 shadow-lg">
+                    <div class="text-2xl font-bold text-indigo-600" id="tagCount">0</div>
                     <div class="text-xs text-gray-500 uppercase mt-1">Active Tags</div>
                 </div>
             </div>
         </div>
 
         <!-- Reference View -->
-        <div class="content p-6 max-h-[80vh] overflow-y-auto" id="referenceContent">
+        <div class="content p-4 md:p-6 max-h-[80vh] overflow-y-auto transition-all duration-300" id="referenceContent">
             <div id="talentGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div class="loading col-span-full text-center p-12 text-gray-500 text-xl">Initializing database and loading talents...</div>
             </div>
         </div>
         
         <!-- Builder View -->
-        <div id="builder" class="p-6 max-h-[80vh] overflow-y-auto hidden">
-             <div class="text-center mb-6">
-                <h2 class="text-2xl font-bold text-gray-800 mb-2">Talent Tree Builder (Pyramid)</h2>
-                <p class="text-gray-600">Select talents for each tier. You must meet the prerequisite structure: Tier N requires at least N-1 talents from the tier above it (N+1).</p>
+        <div id="builder" class="p-4 md:p-6 max-h-[80vh] overflow-y-auto hidden transition-all duration-300">
+             <div class="text-center mb-6 bg-indigo-50 p-4 rounded-xl shadow-inner">
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">Talent Tree Builder (Pyramid)</h2>
+                <p class="text-gray-600">Select talents for each tier. Structure rule: Tier N requires at least N-1 talents from the tier above it (N+1).</p>
+                <div id="pyramidValidation" class="text-red-600 font-semibold mt-2 text-sm hidden">Validation Message</div>
                 <div class="mt-4 flex justify-center space-x-4">
-                    <button id="savePyramidBtn" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-lg transition duration-150 shadow-md">Save Tree</button>
-                    <button id="loadPyramidBtn" class="px-4 py-2 bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-lg transition duration-150 shadow-md">Load Tree</button>
+                    <button id="savePyramidBtn" class="flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition duration-150 shadow-lg">
+                        <span data-lucide="save" class="w-5 h-5 mr-2"></span>
+                        Save Tree
+                    </button>
+                    <button id="loadPyramidBtn" class="flex items-center px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white font-semibold rounded-xl transition duration-150 shadow-lg">
+                        <span data-lucide="download" class="w-5 h-5 mr-2"></span>
+                        Load Tree
+                    </button>
                 </div>
             </div>
-            <div id="pyramid"></div>
+            <!-- The pyramid structure is responsive: stacks on mobile, horizontal rows on desktop -->
+            <div id="pyramid" class="flex flex-col gap-4"></div>
         </div>
     </div>
 
-    <!-- Chatbot Container -->
-    <div id="chatbotContainer" class="fixed bottom-5 right-5 w-[350px] h-[450px] bg-white rounded-xl shadow-2xl flex-col hidden z-[1000] overflow-hidden border border-gray-200">
-        <div id="chatHeader" class="bg-indigo-600 text-white p-4 font-bold text-lg text-center">Genesys AI Assistant</div>
-        <div id="chatMessages" class="flex-grow p-4 overflow-y-auto flex flex-col gap-3">
-            <div class="chat-message ai-message self-start bg-indigo-500 text-white p-3 rounded-lg rounded-tl-none max-w-[80%] shadow-sm">Hello! I can help you with Genesys rules, dice results, and talent suggestions. Ask me anything about the game!</div>
+    <!-- Chatbot Container (Now with API logic integrated into the script below) -->
+    <div id="chatbotContainer" class="fixed bottom-4 right-4 w-full max-w-xs md:max-w-sm h-3/4 md:h-[450px] bg-white rounded-2xl shadow-2xl flex flex-col hidden z-[1000] overflow-hidden border border-gray-200 transform transition-all duration-300">
+        <div id="chatHeader" class="bg-indigo-600 text-white p-4 font-extrabold text-lg flex justify-between items-center rounded-t-2xl">
+            Genesys AI Assistant
+            <button onclick="document.getElementById('chatbotContainer').classList.add('hidden')" class="text-white opacity-70 hover:opacity-100">
+                <span data-lucide="x" class="w-6 h-6"></span>
+            </button>
         </div>
+        <div id="chatMessages" class="flex-grow p-4 overflow-y-auto flex flex-col gap-3">
+            <!-- Messages will be injected here by JavaScript -->
+        </div>
+
+        <!-- NEW LOADING INDICATOR -->
+        <div id="chatLoading" class="hidden p-2 text-center text-emerald-600 font-medium border-t border-gray-200">
+            <svg class="animate-spin h-4 w-4 mr-2 inline-block" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            AI is analyzing...
+        </div>
+        
         <div id="chatInputContainer" class="border-t border-gray-200 p-3 flex gap-2 bg-gray-50">
             <input type="text" id="chatInput" placeholder="Ask a Genesys question..." autofocus
-                   class="flex-grow p-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 text-sm">
-            <button id="chatSendBtn" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition duration-150 shadow-md">Send</button>
+                    class="flex-grow p-3 border border-gray-300 rounded-xl focus:ring-emerald-500 focus:border-emerald-500 text-sm shadow-inner"
+                    onkeypress="if(event.key === 'Enter') sendMessage()">
+            <button id="chatSendBtn" onclick="sendMessage()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition duration-150 shadow-md">
+                <span data-lucide="send" class="w-5 h-5"></span>
+            </button>
         </div>
     </div>
     
@@ -170,7 +204,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, query, where, getDocs, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         // --- GLOBALS AND UTILS ---
         setLogLevel('debug');
@@ -189,41 +223,61 @@
         // The pyramid is 5 rows (for tiers 5 to 1), with max slots [1, 2, 3, 4, 5]
         const pyramidTalents = Array.from({length: 5}, () => Array(5).fill(null));
         const rowTiers = [5, 4, 3, 2, 1];
-        
-        // Tier sizes: Row 0 (Tier 5) has 1 slot, Row 1 (Tier 4) has 2 slots, ..., Row 4 (Tier 1) has 5 slots
         const rowSlotCounts = [1, 2, 3, 4, 5];
+        
+        // Define common tag colors (using explicit Tailwind classes for simplicity in JS)
+        const tagColorMap = {
+            "Combat": "bg-red-500 text-white", "Defense": "bg-blue-500 text-white", 
+            "Healing": "bg-green-500 text-white", "Social": "bg-amber-500 text-white", 
+            "Vehicle": "bg-violet-500 text-white", "Magic": "bg-pink-500 text-white", 
+            "Knowledge": "bg-teal-500 text-white", "Movement": "bg-orange-500 text-white",
+            "Strain": "bg-slate-500 text-white", "Critical": "bg-rose-600 text-white",
+        };
 
         // Talent definitions: Tier colors are handled by CSS variables
         const tagDefinitions = [
-            { name: "Combat", color: "tag-combat", keywords: ["attack", "damage", "hit", "melee", "ranged", "brawl", "weapon", "combat check", "deadly", "lethal"] },
-            { name: "Defense", color: "tag-defense", keywords: ["defense", "soak", "parry", "reflect", "dodge", "sidestep", "armor", "shield"] },
-            { name: "Healing", color: "tag-healing", keywords: ["heal", "wound", "strain", "medicine", "physician", "recovery"] },
-            { name: "Social", color: "tag-social", keywords: ["charm", "coercion", "deception", "leadership", "negotiation", "scathing", "inspiring", "presence"] },
-            { name: "Vehicle", color: "tag-vehicle", keywords: ["piloting", "driving", "vehicle", "speed", "handling", "full throttle"] },
-            { name: "Magic", color: "tag-magic", keywords: ["magic", "spell", "arcana", "divine", "primal", "curse", "barrier", "augment"] },
-            { name: "Knowledge", color: "tag-knowledge", keywords: ["knowledge", "education", "lore", "xenology"] },
-            { name: "Movement", color: "tag-movement", keywords: ["move", "swift", "jump up", "disengage", "shortcut"] },
-            { name: "Strain", color: "tag-strain", keywords: ["strain", "second wind", "grit", "resolve"] },
-            { name: "Critical", color: "tag-critical", keywords: ["critical", "vicious", "deadly accuracy"] },
+            { name: "Combat", keywords: ["attack", "damage", "hit", "melee", "ranged", "brawl", "weapon", "combat check", "deadly", "lethal"] },
+            { name: "Defense", keywords: ["defense", "soak", "parry", "reflect", "dodge", "sidestep", "armor", "shield"] },
+            { name: "Healing", keywords: ["heal", "wound", "strain", "medicine", "physician", "recovery"] },
+            { name: "Social", keywords: ["charm", "coercion", "deception", "leadership", "negotiation", "scathing", "inspiring", "presence"] },
+            { name: "Vehicle", keywords: ["piloting", "driving", "vehicle", "speed", "handling", "full throttle"] },
+            { name: "Magic", keywords: ["magic", "spell", "arcana", "divine", "primal", "curse", "barrier", "augment"] },
+            { name: "Knowledge", keywords: ["knowledge", "education", "lore", "xenology"] },
+            { name: "Movement", keywords: ["move", "swift", "jump up", "disengage", "shortcut"] },
+            { name: "Strain", keywords: ["strain", "second wind", "grit", "resolve"] },
+            { name: "Critical", keywords: ["critical", "vicious", "deadly accuracy"] },
         ];
 
         // --- MOCK TALENTS DATA (Replaces CSV load) ---
         const MOCK_TALENTS = [
-            { name: "Parry", tier: 1, activation: "Active (Maneuver)", ranked: "Yes", description: "Once per round, when an enemy performs a Melee combat check targeting you, you may use a maneuver to increase your Melee defense by +1.", source: "Core Rulebook" },
-            { name: "Grit", tier: 1, activation: "Passive", ranked: "Yes", description: "The character increases their total Strain Threshold by 1.", source: "Core Rulebook" },
-            { name: "Dodge", tier: 2, activation: "Active (Incidental, Out of Turn)", ranked: "No", description: "When targeted by a Ranged combat check, you may spend 1 Strain to increase your Ranged Defense by +1 against that check.", source: "Core Rulebook" },
-            { name: "Full Throttle", tier: 3, activation: "Active (Maneuver)", ranked: "No", description: "When piloting a vehicle, you may perform this maneuver to increase the vehicle's speed by 1 and decrease its Handling by 1 until the end of the round.", source: "Realms of Terrinoth" },
-            { name: "Inspiring Rhetoric", tier: 4, activation: "Active (Action)", ranked: "Yes", description: "Once per encounter, you may perform a Hard (3 Purple) Leadership check to inspire allies within Short range. If successful, allies recover 1 Strain, plus 1 additional Strain per rank of this talent.", source: "Core Rulebook" },
-            { name: "Master Physician", tier: 5, activation: "Active (Action)", ranked: "No", description: "When performing a Medicine check to heal wounds or critical injuries, you may spend 1 Destiny Point to treat up to 2 additional characters within Engaged range on the same action.", source: "Core Rulebook" },
-            { name: "Lethal Blows", tier: 3, activation: "Passive", ranked: "Yes", description: "Add +1 damage to all successful combat checks.", source: "Core Rulebook" },
-            { name: "Knowledge is Power", tier: 2, activation: "Active (Incidental)", ranked: "No", description: "When making a skill check that relies on a Knowledge skill, you may spend 1 Strain to downgrade the difficulty once.", source: "Realms of Terrinoth" },
-            { name: "Overcharge", tier: 3, activation: "Active (Incidental)", ranked: "No", description: "When performing a successful combat check with an Energy weapon, you may spend 2 Advantage to increase the weapon's damage by +1.", source: "Star Wars EotE" },
-            { name: "Jump Up", tier: 1, activation: "Active (Incidental)", ranked: "No", description: "Once per round, when you suffer a critical injury, you may stand up as an incidental. If you suffer a critical injury that leaves you incapacitated, you cannot use this talent.", source: "Core Rulebook" },
-            { name: "Dedication", tier: 4, activation: "Passive", ranked: "No", description: "You gain 1 rank in one of your characteristics of choice (cannot exceed 6).", source: "Core Rulebook" },
-            { name: "Second Wind", tier: 1, activation: "Active (Incidental, Out of Turn)", ranked: "Yes", description: "The character recovers 3 Strain, plus 1 additional Strain per rank.", source: "Core Rulebook" },
-            { name: "Reflect", tier: 3, activation: "Active (Incidental, Out of Turn)", ranked: "Yes", description: "When targeted by a Ranged combat check, you may spend 1 Destiny Point to reduce the damage taken by 1, plus 1 per rank.", source: "Force and Destiny" },
+            { id: 1, name: "Parry", tier: 1, activation: "Active (Maneuver)", ranked: "Yes", description: "Once per round, when an enemy performs a Melee combat check targeting you, you may use a maneuver to increase your Melee defense by +1.", source: "Core Rulebook" },
+            { id: 2, name: "Grit", tier: 1, activation: "Passive", ranked: "Yes", description: "The character increases their total Strain Threshold by 1.", source: "Core Rulebook" },
+            { id: 3, name: "Dodge", tier: 2, activation: "Active (Incidental, Out of Turn)", ranked: "No", description: "When targeted by a Ranged combat check, you may spend 1 Strain to increase your Ranged Defense by +1 against that check.", source: "Core Rulebook" },
+            { id: 4, name: "Full Throttle", tier: 3, activation: "Active (Maneuver)", ranked: "No", description: "When piloting a vehicle, you may perform this maneuver to increase the vehicle's speed by 1 and decrease its Handling by 1 until the end of the round.", source: "Realms of Terrinoth" },
+            { id: 5, name: "Inspiring Rhetoric", tier: 4, activation: "Active (Action)", ranked: "Yes", description: "Once per encounter, you may perform a Hard (3 Purple) Leadership check to inspire allies within Short range. If successful, allies recover 1 Strain, plus 1 additional Strain per rank of this talent.", source: "Core Rulebook" },
+            { id: 6, name: "Master Physician", tier: 5, activation: "Active (Action)", ranked: "No", description: "When performing a Medicine check to heal wounds or critical injuries, you may spend 1 Destiny Point to treat up to 2 additional characters within Engaged range on the same action.", source: "Core Rulebook" },
+            { id: 7, name: "Lethal Blows", tier: 3, activation: "Passive", ranked: "Yes", description: "Add +1 damage to all successful combat checks.", source: "Core Rulebook" },
+            { id: 8, name: "Knowledge is Power", tier: 2, activation: "Active (Incidental)", ranked: "No", description: "When making a skill check that relies on a Knowledge skill, you may spend 1 Strain to downgrade the difficulty once.", source: "Realms of Terrinoth" },
+            { id: 9, name: "Overcharge", tier: 3, activation: "Active (Incidental)", ranked: "No", description: "When performing a successful combat check with an Energy weapon, you may spend 2 Advantage to increase the weapon's damage by +1.", source: "Star Wars EotE" },
+            { id: 10, name: "Jump Up", tier: 1, activation: "Active (Incidental)", ranked: "No", description: "Once per round, when you suffer a critical injury, you may stand up as an incidental. If you suffer a critical injury that leaves you incapacitated, you cannot use this talent.", source: "Core Rulebook" },
+            { id: 11, name: "Dedication", tier: 4, activation: "Passive", ranked: "No", description: "You gain 1 rank in one of your characteristics of choice (cannot exceed 6).", source: "Core Rulebook" },
+            { id: 12, name: "Second Wind", tier: 1, activation: "Active (Incidental, Out of Turn)", ranked: "Yes", description: "The character recovers 3 Strain, plus 1 additional Strain per rank.", source: "Core Rulebook" },
+            { id: 13, name: "Reflect", tier: 3, activation: "Active (Incidental, Out of Turn)", ranked: "Yes", description: "When targeted by a Ranged combat check, you may spend 1 Destiny Point to reduce the damage taken by 1, plus 1 per rank.", source: "Force and Destiny" },
         ];
         
+        // --- CHATBOT API & STATE ---
+        const apiKey = "AIzaSyBDqTM2lMKdT6Khz6RdJmdLwYdDt898vj0"; // Canvas runtime provides this
+        const CHAT_MODEL_NAME = "gemini-2.5-flash-preview-09-2025";
+        const chatApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${CHAT_MODEL_NAME}:generateContent?key=${apiKey}`;
+
+        let chatHistory = [
+            {
+                role: "model",
+                parts: [{ text: "Hello! I can help you with Genesys rules, dice results, and talent suggestions. Ask me anything about the game!" }]
+            }
+        ];
+        let isChatFetching = false;
+
         // --- MODAL UTILITIES (Replaces alert) ---
         function showModal(title, message) {
             document.getElementById('modalTitle').textContent = title;
@@ -246,6 +300,7 @@
                     userId = user.uid;
                     console.log("Firebase Auth Ready. User ID:", userId);
                     // Load the user's saved pyramid once authenticated
+                    isAuthReady = true;
                     await loadPyramid();
                 } else {
                     try {
@@ -280,8 +335,7 @@
                 // Store in private user data: artifacts/{appId}/users/{userId}/talent_tree/current
                 const docRef = doc(db, `artifacts/${appId}/users/${userId}/talent_tree/current`);
                 
-                // We need to serialize the pyramidTalents array to store only necessary data
-                // and handle the null values correctly in the sparse array structure.
+                // Only store essential data (name, tier, source) to keep the document small
                 const serializableData = pyramidTalents.map(row => 
                     row.map(talent => talent ? {
                         name: talent.name,
@@ -306,17 +360,36 @@
         }
 
         async function loadPyramid() {
-            if (!db || !userId) return; // Don't show error, just exit if not ready
+            if (!db || !userId || !isAuthReady) return; 
             try {
                 const docRef = doc(db, `artifacts/${appId}/users/${userId}/talent_tree/current`);
-                const docSnap = await getDoc(docRef);
+                
+                // Exponential backoff retry logic for fetching data
+                let docSnap = null;
+                const maxRetries = 3;
+                let delay = 1000;
 
-                if (docSnap.exists()) {
+                for (let i = 0; i < maxRetries; i++) {
+                    try {
+                        docSnap = await getDoc(docRef);
+                        break; // Success!
+                    } catch (e) {
+                        if (i < maxRetries - 1) {
+                            console.warn(`Firestore read failed, retrying in ${delay}ms...`);
+                            await new Promise(resolve => setTimeout(resolve, delay));
+                            delay *= 2;
+                        } else {
+                            throw e; // Re-throw error on final failure
+                        }
+                    }
+                }
+
+                if (docSnap && docSnap.exists()) {
                     const data = docSnap.data();
                     const loadedPyramid = data.pyramid.map(row => 
                         row.map(serializedTalent => {
                             if (!serializedTalent) return null;
-                            // Re-hydrate the talent object including tags
+                            // Re-hydrate the talent object including generated tags
                             const talent = {...serializedTalent};
                             talent.tags = generateTagsForTalent(talent);
                             return talent;
@@ -326,7 +399,8 @@
                     // Merge loaded data back into the main state variable
                     for (let r = 0; r < 5; r++) {
                         for (let s = 0; s < rowSlotCounts[r]; s++) {
-                            pyramidTalents[r][s] = loadedPyramid[r]?.[s] || null;
+                            // Ensure the array access is safe
+                            pyramidTalents[r][s] = loadedPyramid[r] && loadedPyramid[r][s] !== undefined ? loadedPyramid[r][s] : null;
                         }
                     }
 
@@ -341,6 +415,125 @@
             }
         }
 
+        // --- CHATBOT LOGIC (Gemini API Integration) ---
+        
+        // Utility to convert Markdown text to HTML (basic formatting)
+        function formatMarkdown(text) {
+            let html = text.replace(/\n/g, '<br>');
+            // Bold **text**
+            html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            // Italic *text*
+            html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+            // Basic list conversion (- item)
+            html = html.replace(/^- (.*)$/gm, '<li>$1</li>');
+            if (html.includes('<li>')) {
+                // Wrap only if list items exist, and replace temporary wrappers
+                html = '<ul>' + html + '</ul>';
+                html = html.replace('</ul><li>', '<li>').replace('</ul><br><ul>', '</ul><ul>');
+            }
+            return html;
+        }
+
+        function appendMessage(role, text) {
+            const messagesDiv = document.getElementById('chatMessages');
+            
+            const isUser = role === 'user';
+            const bgColor = isUser ? 'bg-indigo-600' : 'bg-indigo-100';
+            const textColor = isUser ? 'text-white' : 'text-gray-800';
+            const alignment = isUser ? 'self-end' : 'self-start';
+            const borderRadius = isUser ? 'rounded-br-none' : 'rounded-tl-none';
+            const shadowClass = isUser ? 'shadow-md' : 'shadow-sm';
+
+            const messageElement = document.createElement('div');
+            messageElement.className = `chat-message ${isUser ? 'user-message' : 'ai-message'} ${alignment} ${bgColor} ${textColor} p-3 rounded-xl ${borderRadius} max-w-[85%] ${shadowClass}`;
+            messageElement.innerHTML = formatMarkdown(text);
+            
+            messagesDiv.appendChild(messageElement);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function toggleLoading(show) {
+            isChatFetching = show;
+            document.getElementById('chatLoading').classList.toggle('hidden', !show);
+            document.getElementById('chatSendBtn').disabled = show;
+            document.getElementById('chatInput').disabled = show;
+        }
+
+        async function sendMessage() {
+            if (isChatFetching) return;
+
+            const inputElement = document.getElementById('chatInput');
+            const userText = inputElement.value.trim();
+
+            if (!userText) return;
+
+            // 1. Add user message to UI and history
+            appendMessage('user', userText);
+            chatHistory.push({ role: "user", parts: [{ text: userText }] });
+            
+            // Clear input and show loading
+            inputElement.value = '';
+            toggleLoading(true);
+
+            // 2. Prepare API payload
+            const payload = {
+                contents: chatHistory,
+                // Using Google Search grounding for up-to-date and factual responses
+                tools: [{ "google_search": {} }], 
+                systemInstruction: {
+                    parts: [{ text: "You are a friendly, helpful, and concise AI assistant named Gemini, specifically for the Genesys RPG system. Use your knowledge to provide accurate rules explanations, dice results analysis, or talent suggestions based on keywords. Respond in Markdown." }]
+                },
+            };
+
+            const maxRetries = 3;
+            let currentRetry = 0;
+
+            while (currentRetry < maxRetries) {
+                try {
+                    const response = await fetch(chatApiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    
+                    const modelText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                    if (modelText) {
+                        // 3. Add model response to UI and history
+                        appendMessage('model', modelText);
+                        chatHistory.push({ role: "model", parts: [{ text: modelText }] });
+                        break; // Exit the loop on success
+                    } else {
+                        throw new Error("Received an invalid response format from the API.");
+                    }
+
+                } catch (error) {
+                    currentRetry++;
+                    console.error(`Chatbot API Attempt ${currentRetry} failed:`, error);
+                    if (currentRetry < maxRetries) {
+                        // Exponential backoff
+                        const delay = Math.pow(2, currentRetry) * 1000;
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                    } else {
+                        appendMessage('model', "I apologize, but I am currently unable to connect to the Genesys AI service. Please try again later.");
+                        break; // Exit the loop after max retries
+                    }
+                }
+            }
+
+            // 4. Hide loading indicator
+            toggleLoading(false);
+        }
+        // Expose sendMessage globally for the button/keypress events in HTML
+        window.sendMessage = sendMessage;
+
+
         // --- DATA PROCESSING AND RENDERING ---
         function generateTagsForTalent(talent) {
             const text = (talent.name + " " + talent.description).toLowerCase();
@@ -348,17 +541,17 @@
             for (const def of tagDefinitions) {
                 if (def.keywords.some(kw => text.includes(kw))) {
                     const exists = tags.some(t => t.name === def.name);
-                    if (!exists) tags.push({ name: def.name, color: def.color });
+                    if (!exists) tags.push({ name: def.name, colorClass: tagColorMap[def.name] });
                 }
             }
-            // Specific overrides/fixes
+            // Add specific tags not easily captured by keywords
             if (talent.name.toLowerCase().includes("parry") || talent.name.toLowerCase().includes("reflect") || talent.name.toLowerCase().includes("dodge")) {
                  const exists = tags.some(t => t.name === "Defense");
-                 if (!exists) tags.push({name: "Defense", color: "tag-defense"});
+                 if (!exists) tags.push({name: "Defense", colorClass: tagColorMap["Defense"]});
             }
             if (talent.name.toLowerCase().includes("grit") || talent.name.toLowerCase().includes("second wind")) {
                  const exists = tags.some(t => t.name === "Strain");
-                 if (!exists) tags.push({name: "Strain", color: "tag-strain"});
+                 if (!exists) tags.push({name: "Strain", colorClass: tagColorMap["Strain"]});
             }
             return tags;
         }
@@ -375,7 +568,10 @@
             document.getElementById('totalCount').textContent = talents.length;
             buildTagBar();
             applyFilters();
-            buildPyramid();
+            if (isAuthReady) {
+                // Initialize pyramid UI once, load data separately
+                buildPyramid(); 
+            }
         }
 
         function buildTagBar() {
@@ -383,38 +579,30 @@
             bar.innerHTML = '';
             tagDefinitions.forEach(def => {
                 const btn = document.createElement('button');
-                btn.className = `tag-btn px-3 py-1.5 rounded-full text-sm font-semibold transition duration-200 border-2 border-gray-300 bg-gray-200 text-gray-700 hover:border-indigo-400 ${def.color}`;
+                const isActive = activeTags.has(def.name);
+                
+                // Use a neutral background for inactive, and apply the tag's color on hover/active
+                let baseClass = `tag-btn px-3 py-1 rounded-full text-xs font-semibold transition duration-200 border border-gray-300 bg-white text-gray-700 hover:shadow-md`;
+                let activeClass = isActive ? tagColorMap[def.name] : 'hover:bg-indigo-100 hover:border-indigo-400';
+                
+                btn.className = `${baseClass} ${activeClass} ${isActive ? 'active' : ''}`;
                 btn.textContent = def.name;
                 btn.dataset.tag = def.name;
                 btn.onclick = () => toggleTag(def.name);
                 bar.appendChild(btn);
             });
-
-            // Apply active class based on the tag-color style variables
-            const style = document.createElement('style');
-            style.textContent = `
-                .tag-btn.active.tag-combat { background: #e53e3e; color: white; border-color: #c53030; transform: scale(1.05); box-shadow: 0 4px 12px rgba(229, 62, 62, 0.4); }
-                .tag-btn.active.tag-defense { background: #3182ce; color: white; border-color: #2b6cb0; transform: scale(1.05); box-shadow: 0 4px 12px rgba(49, 130, 206, 0.4); }
-                .tag-btn.active.tag-healing { background: #38a169; color: white; border-color: #2f855a; transform: scale(1.05); box-shadow: 0 4px 12px rgba(56, 161, 105, 0.4); }
-                .tag-btn.active.tag-social { background: #d69e2e; color: white; border-color: #b7791f; transform: scale(1.05); box-shadow: 0 4px 12px rgba(214, 158, 46, 0.4); }
-                .tag-btn.active.tag-vehicle { background: #805ad5; color: white; border-color: #6b46c1; transform: scale(1.05); box-shadow: 0 4px 12px rgba(128, 90, 213, 0.4); }
-                .tag-btn.active.tag-magic { background: #d53f8c; color: white; border-color: #b83280; transform: scale(1.05); box-shadow: 0 4px 12px rgba(213, 63, 140, 0.4); }
-                .tag-btn.active.tag-knowledge { background: #319795; color: white; border-color: #2c7a7b; transform: scale(1.05); box-shadow: 0 4px 12px rgba(49, 151, 149, 0.4); }
-                .tag-btn.active.tag-movement { background: #dd6b20; color: white; border-color: #c05621; transform: scale(1.05); box-shadow: 0 4px 12px rgba(221, 107, 32, 0.4); }
-                .tag-btn.active.tag-strain { background: #718096; color: white; border-color: #4a5568; transform: scale(1.05); box-shadow: 0 4px 12px rgba(113, 128, 150, 0.4); }
-                .tag-btn.active.tag-critical { background: #9b2c2c; color: white; border-color: #802a2a; transform: scale(1.05); box-shadow: 0 4px 12px rgba(155, 44, 44, 0.4); }
-            `;
-            document.head.appendChild(style);
         }
 
         function toggleTag(tagName) {
             const btn = document.querySelector(`.tag-btn[data-tag="${tagName}"]`);
             if (activeTags.has(tagName)) {
                 activeTags.delete(tagName);
-                btn.classList.remove('active');
+                // Remove active classes and restore hover styles
+                btn.className = btn.className.split(' ').filter(cls => !tagColorMap[tagName].includes(cls) && cls !== 'active').join(' ') + ' hover:bg-indigo-100 hover:border-indigo-400';
             } else {
                 activeTags.add(tagName);
-                btn.classList.add('active');
+                // Add active classes
+                btn.className = btn.className.split(' ').filter(cls => !cls.startsWith('hover')).join(' ') + ' ' + tagColorMap[tagName] + ' active';
             }
             applyFilters();
         }
@@ -453,26 +641,40 @@
 
             list.forEach(t => {
                 const card = document.createElement('div');
-                card.className = `talent-card tier-${t.tier} bg-white border-2 border-gray-200 rounded-xl p-6 transition duration-300 hover:shadow-lg hover:border-indigo-400 relative overflow-hidden shadow-md cursor-pointer`;
+                card.className = `talent-card tier-${t.tier} bg-white border-2 border-gray-100 rounded-2xl p-6 transition duration-300 hover:shadow-xl hover:border-indigo-500 relative overflow-hidden shadow-md cursor-pointer`;
                 card.innerHTML = `
                     <div class="flex justify-between items-start mb-3 gap-2">
-                        <div class="text-xl font-bold text-gray-900">${t.name}</div>
-                        <div class="talent-tier text-white text-xs font-bold px-3 py-1 rounded-full" style="background: var(--tier-color);">Tier ${t.tier}</div>
+                        <div class="text-xl font-bold text-gray-900">${t.name} ${t.ranked === 'Yes' ? '(Ranked)' : ''}</div>
+                        <div class="talent-tier text-white text-xs font-bold px-3 py-1 rounded-full shadow-md" style="background: var(--tier-color);">Tier ${t.tier}</div>
                     </div>
                     <div class="flex flex-wrap gap-1.5 my-2">
-                        ${t.tags.map(tag => `<span class="talent-tag text-xs font-semibold px-2 py-0.5 rounded-full text-white" style="background: ${getComputedStyle(document.documentElement).getPropertyValue(`--${tag.color.replace('tag-', 'tier-')}`)}">${tag.name}</span>`).join('')}
+                        ${t.tags.map(tag => `<span class="talent-tag text-xs font-semibold px-2 py-0.5 rounded-full shadow-sm ${tag.colorClass}">${tag.name}</span>`).join('')}
                     </div>
                     <div class="flex gap-4 flex-wrap my-2 text-sm text-gray-600">
                         <div class="meta-item"><span class="font-semibold text-gray-800">Activation:</span> ${t.activation}</div>
-                        <div class="meta-item"><span class="font-semibold text-gray-800">Ranked:</span> ${t.ranked}</div>
                     </div>
                     <div class="text-gray-700 text-sm leading-relaxed mt-3">${t.description}</div>
                     <div class="text-xs text-gray-400 italic text-right mt-3">Source: ${t.source}</div>
+                    <button class="select-btn absolute top-2 right-2 p-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-full transition duration-150 shadow-lg hidden" 
+                            data-talent-tier="${t.tier}"
+                            data-talent-name="${t.name}"
+                            onclick="event.stopPropagation(); assignTalentToSlot(${t.tier}, '${t.name.replace(/'/g, "\\'")}')">
+                        <span data-lucide="plus" class="w-5 h-5"></span>
+                    </button>
                 `;
-                card.addEventListener('click', () => assignTalentToSlot(t));
                 grid.appendChild(card);
             });
+            lucide.createIcons();
             document.getElementById('shownCount').textContent = list.length;
+            
+            // Show select buttons if a slot is pending
+            document.querySelectorAll('.select-btn').forEach(btn => {
+                if (pendingSlot && parseInt(btn.dataset.talentTier) === rowTiers[pendingSlot.r]) {
+                    btn.classList.remove('hidden');
+                } else {
+                    btn.classList.add('hidden');
+                }
+            });
         }
 
         // --- TALENT TREE BUILDER LOGIC ---
@@ -481,35 +683,21 @@
             pyramid.innerHTML = '';
             
             for (let r = 0; r < 5; r++) {
-                const row = document.createElement('div');
-                // Center the rows with less than max slots
-                const slotCount = rowSlotCounts[r];
                 const tier = rowTiers[r];
+                const row = document.createElement('div');
                 
-                row.className = 'pyramid-row flex justify-center mb-5 gap-4';
-                
-                for (let s = 0; s < slotCount; s++) {
+                // Responsive row: stack on mobile, center horizontal on desktop
+                row.className = 'pyramid-row flex flex-col md:flex-row justify-center mb-5 gap-4 w-full';
+                row.innerHTML = `<h3 class="text-lg font-bold text-gray-700 w-full text-left md:text-center p-2 rounded-lg bg-gray-100 shadow-inner">Tier ${tier} (${pyramidTalents[r].filter(t => t).length}/${rowSlotCounts[r]} Slots Used)</h3>`;
+
+                for (let s = 0; s < rowSlotCounts[r]; s++) {
                     const slot = document.createElement('div');
-                    slot.className = `pyramid-slot tier-${tier} bg-white border-2 border-gray-200 rounded-xl p-5 transition duration-300 hover:shadow-lg hover:border-indigo-400 relative overflow-hidden shadow-md cursor-pointer w-[360px]`;
+                    // Responsive slot size: full width on mobile, fixed-ish width on desktop
+                    slot.className = `pyramid-slot tier-${tier} bg-white border-2 border-gray-200 rounded-xl p-5 transition duration-300 hover:shadow-lg relative overflow-hidden shadow-md cursor-pointer w-full md:w-64 max-w-full md:max-w-md`;
                     slot.dataset.row = r;
                     slot.dataset.slot = s;
-                    slot.innerHTML = `
-                        <div class="flex justify-between items-start mb-3 gap-2">
-                            <div class="talent-name text-lg font-bold text-gray-900">-- Select Talent --</div>
-                            <div class="talent-tier text-white text-xs font-bold px-3 py-1 rounded-full" style="background: var(--tier-color);">Tier ${tier}</div>
-                        </div>
-                        <div class="talent-tags flex flex-wrap gap-1.5 my-2 hidden"></div>
-                        <div class="talent-meta flex gap-4 flex-wrap my-2 text-sm text-gray-600 hidden">
-                            <div class="meta-item"><span class="font-semibold text-gray-800">Activation:</span> --</div>
-                            <div class="meta-item"><span class="font-semibold text-gray-800">Ranked:</span> --</div>
-                        </div>
-                        <div class="talent-description text-gray-700 text-sm leading-relaxed mt-3 hidden"></div>
-                        <div class="talent-source text-xs text-gray-400 italic text-right mt-3 hidden"></div>
-                        <label class="active-label text-sm text-gray-600 flex items-center gap-1 mt-3 hidden">
-                            <input type="checkbox" class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"> Active?
-                        </label>
-                    `;
-                    slot.addEventListener('click', () => openSearchForSlot(slot));
+                    slot.onclick = () => selectSlot(r, s, tier);
+
                     row.appendChild(slot);
                 }
                 pyramid.appendChild(row);
@@ -517,262 +705,144 @@
             updatePyramidUI();
         }
 
-        function openSearchForSlot(slot) {
-            pendingSlot = slot;
-            const tier = rowTiers[parseInt(slot.dataset.row)];
-            // Clear search, filter by tier, and switch view
-            document.getElementById('searchInput').value = '';
-            document.getElementById('tierFilter').value = tier.toString();
-            applyFilters();
-            showBuilder(false);
-            // Highlight the target slot briefly
-            slot.style.transition = 'none';
-            slot.style.boxShadow = '0 0 0 5px #f6e05e'; 
-            setTimeout(() => {
-                slot.style.transition = 'all 0.3s';
-                slot.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)';
-            }, 500);
-        }
-
-        function assignTalentToSlot(talent) {
-            if (!pendingSlot) return;
-
-            const row = parseInt(pendingSlot.dataset.row);
-            const slotIndex = parseInt(pendingSlot.dataset.slot);
-            const currentTalent = pyramidTalents[row][slotIndex];
-            
-            // Check if the talent is already in the pyramid (unless it's ranked)
-            const isDuplicate = pyramidTalents.flat().some((t, index) => 
-                t && t.name === talent.name && t.ranked.toLowerCase() === 'no' && 
-                !(index === (row * 5 + slotIndex)) // exclude checking against itself
-            );
-
-            if (isDuplicate) {
-                showModal('Duplicate Talent Error', `The talent "${talent.name}" is not ranked and cannot be taken more than once.`);
-                return;
-            }
-
-            // Temporarily assign and validate
-            pyramidTalents[row][slotIndex] = talent;
-
-            if (!validatePyramid()) {
-                showModal('Pyramid Rule Violation', `The talent "${talent.name}" (Tier ${talent.tier}) violates the pyramid rule. You must have at least ${talent.tier - 1} talents in the tier above it (Tier ${talent.tier + 1}) to take a talent at this tier.`);
-                pyramidTalents[row][slotIndex] = currentTalent; // Revert
-                return;
-            }
-
-            pendingSlot = null;
-            updatePyramidUI();
-            showBuilder(true); // Switch back to builder view
-        }
-        
         function updatePyramidUI() {
-            // Renders the current state of pyramidTalents onto the UI
-            pyramidTalents.forEach((rowArray, r) => {
-                rowArray.forEach((t, s) => {
-                    // Only iterate over valid slots for this row
-                    if (s >= rowSlotCounts[r]) return; 
+            const validationEl = document.getElementById('pyramidValidation');
+            const totalSlotsFilled = pyramidTalents.flat().filter(t => t).length;
+            let validationMessage = '';
+            let isValid = true;
 
+            // Loop through tiers 5 down to 2 (row r=0 to r=3)
+            for (let r = 0; r < 4; r++) {
+                const currentTier = rowTiers[r]; // Tier N
+                const nextTier = rowTiers[r + 1]; // Tier N-1 (the one below it)
+                
+                // Count filled slots in the current tier (N)
+                const filledCurrentTier = pyramidTalents[r].filter(t => t).length; 
+                
+                // Count filled slots in the tier below (N-1)
+                const filledNextTier = pyramidTalents[r + 1].filter(t => t).length;
+                
+                const requiredFromAbove = nextTier - 1; // e.g. Tier 4 (r=1) requires 3 (4-1) from Tier 5 (r=0)
+
+                if (filledNextTier > 0 && filledCurrentTier < requiredFromAbove) {
+                    validationMessage = `Tier ${nextTier} requires ${requiredFromAbove} talents from Tier ${currentTier} or higher. You only have ${filledCurrentTier}.`;
+                    isValid = false;
+                    break;
+                }
+            }
+            
+            if (isValid) {
+                validationEl.classList.add('hidden');
+            } else {
+                validationEl.textContent = validationMessage;
+                validationEl.classList.remove('hidden');
+            }
+
+            // Update the UI slots
+            for (let r = 0; r < 5; r++) {
+                for (let s = 0; s < rowSlotCounts[r]; s++) {
                     const slot = document.querySelector(`.pyramid-slot[data-row="${r}"][data-slot="${s}"]`);
-                    if (!slot) return;
+                    const talent = pyramidTalents[r][s];
                     
-                    if (t) {
-                        slot.querySelector('.talent-name').textContent = t.name;
-                        slot.querySelector('.talent-tags').innerHTML = t.tags.map(tag => `<span class="talent-tag text-xs font-semibold px-2 py-0.5 rounded-full text-white" style="background: ${getComputedStyle(document.documentElement).getPropertyValue(`--${tag.color.replace('tag-', 'tier-')}`)}">${tag.name}</span>`).join('');
-                        slot.querySelector('.talent-tags').classList.remove('hidden');
-                        slot.querySelector('.talent-meta').classList.remove('hidden');
-                        slot.querySelector('.talent-description').classList.remove('hidden');
-                        slot.querySelector('.talent-source').classList.remove('hidden');
-                        slot.querySelector('.active-label').classList.remove('hidden');
-                        slot.querySelectorAll('.meta-item')[0].innerHTML = `<span class="font-semibold text-gray-800">Activation:</span> ${t.activation}`;
-                        slot.querySelectorAll('.meta-item')[1].innerHTML = `<span class="font-semibold text-gray-800">Ranked:</span> ${t.ranked}`;
-                        slot.querySelector('.talent-description').textContent = t.description;
-                        slot.querySelector('.talent-source').textContent = `Source: ${t.source}`;
-                    } else {
+                    if (slot) {
                         const tier = rowTiers[r];
-                        slot.querySelector('.talent-name').textContent = `-- Select Talent --`;
-                        slot.querySelector('.talent-tags').classList.add('hidden');
-                        slot.querySelector('.talent-meta').classList.add('hidden');
-                        slot.querySelector('.talent-description').classList.add('hidden');
-                        slot.querySelector('.talent-source').classList.add('hidden');
-                        slot.querySelector('.active-label').classList.add('hidden');
+                        
+                        if (talent) {
+                            slot.innerHTML = `
+                                <div class="flex justify-between items-start mb-3 gap-2">
+                                    <div class="talent-name text-lg font-bold text-gray-900">${talent.name}</div>
+                                    <div class="talent-tier text-white text-xs font-bold px-3 py-1 rounded-full shadow-md" style="background: var(--tier-color);">Tier ${tier}</div>
+                                </div>
+                                <div class="talent-tags flex flex-wrap gap-1.5 my-2">
+                                    ${talent.tags.map(tag => `<span class="talent-tag text-xs font-semibold px-2 py-0.5 rounded-full shadow-sm ${tag.colorClass}">${tag.name}</span>`).join('')}
+                                </div>
+                                <div class="talent-description text-gray-700 text-sm leading-relaxed mt-3">${talent.description.substring(0, 100)}...</div>
+                                <button class="remove-btn absolute top-2 right-2 p-1 bg-red-500 hover:bg-red-600 text-white rounded-full transition duration-150 shadow-lg" 
+                                        onclick="event.stopPropagation(); removeTalentFromSlot(${r}, ${s})">
+                                    <span data-lucide="x" class="w-4 h-4"></span>
+                                </button>
+                            `;
+                            slot.classList.remove('hover:border-indigo-400');
+                            slot.classList.add('hover:ring-2', 'hover:ring-red-500'); // Highlight on removal hover
+                        } else {
+                            // Empty slot
+                            slot.innerHTML = `
+                                <div class="flex justify-between items-start mb-3 gap-2">
+                                    <div class="talent-name text-lg font-semibold text-gray-500">-- Select Talent --</div>
+                                    <div class="talent-tier text-white text-xs font-bold px-3 py-1 rounded-full shadow-md" style="background: var(--tier-color);">Tier ${tier}</div>
+                                </div>
+                                <div class="text-sm text-gray-400 italic">Click to search and assign a talent to this slot.</div>
+                            `;
+                            slot.classList.add('hover:border-indigo-400', 'hover:shadow-xl');
+                            slot.classList.remove('hover:ring-2', 'hover:ring-red-500');
+                        }
                     }
-                });
+                }
+            }
+            lucide.createIcons();
+        }
+
+        function selectSlot(r, s, tier) {
+            // If the slot is already filled, click should do nothing or remove (we handle removal with the X button)
+            if (pyramidTalents[r][s]) {
+                return;
+            }
+
+            // Set the pending slot
+            pendingSlot = { r, s, tier };
+
+            // Switch to reference view
+            document.getElementById('referenceContent').classList.remove('hidden');
+            document.getElementById('builder').classList.add('hidden');
+            document.getElementById('builderBtn').innerHTML = '<span data-lucide="book-open" class="w-5 h-5 mr-2"></span>Return to Builder';
+            document.getElementById('builderBtn').classList.replace('bg-indigo-600', 'bg-gray-600');
+            
+            // Highlight the appropriate talents in the reference view
+            document.querySelectorAll('.select-btn').forEach(btn => {
+                if (parseInt(btn.closest('.talent-card').className.match(/tier-(\d)/)[1]) === tier) {
+                    btn.classList.remove('hidden');
+                } else {
+                    btn.classList.add('hidden');
+                }
             });
+
+            showModal('Slot Selected', `Please select a Tier ${tier} talent from the list below to fill the slot.`);
         }
         
-        function validatePyramid() {
-            // Pyramid Rule: To take a Tier N talent (N > 1), you must have at least N-1 talents in the tier above it (Tier N+1).
-            // Tier 1 (row 4) has no prerequisite.
-            // Tier 2 (row 3) needs 1 talent in Tier 3 (row 2).
-            // Tier 3 (row 2) needs 2 talents in Tier 4 (row 1).
-            // Tier 4 (row 1) needs 3 talents in Tier 5 (row 0).
-            // Tier 5 (row 0) needs 4 talents in an imaginary Tier 6 (not applicable, always 1 slot).
+        // This function is called from the 'renderTalents' select button
+        window.assignTalentToSlot = function(tier, talentName) {
+            if (!pendingSlot || rowTiers[pendingSlot.r] !== tier) {
+                showModal('Error', 'Please select a slot in the Talent Builder first.');
+                return;
+            }
             
-            // The logic here is tricky based on the provided framework which seems inverted.
-            // Let's assume the user meant the standard tree: T1 (bottom) -> T5 (top).
-            // Row 0 = T5 (1 slot)
-            // Row 1 = T4 (2 slots)
-            // Row 2 = T3 (3 slots)
-            // Row 3 = T2 (4 slots)
-            // Row 4 = T1 (5 slots)
-            
-            // The original code has rowTiers = [5, 4, 3, 2, 1], so Row 0 is T5, Row 4 is T1.
-            // Pyramid Rule (F&D/Genesys Standard): To buy a TIER N talent, you need N-1 talents from tiers HIGHER than N.
-            // Let's simplify: Standard rule is: To buy a TIER N talent, you must have N-1 talents already purchased on the tree.
-            // BUT a common house rule/tree rule is: To purchase a TIER N talent, you must have purchased N-1 talents from tiers 1 through N-1. (This is easier to implement)
-            
-            // Let's use the most common rule: A talent can only be purchased if you have AT LEAST N-1 talents of lower tiers (Tier 1 to Tier N-1).
-            
-            let totalTalents = 0;
-            for (let r = 4; r >= 0; r--) { // Start from T1 (Row 4) and go up to T5 (Row 0)
-                const tier = rowTiers[r];
-                const requiredPrereqs = tier > 1 ? tier - 1 : 0;
-                
-                let talentsInTier = 0;
-                let talentsInHigherTiers = 0; // Talents in T1 to T(N-1)
-
-                // Count talents in current tier
-                pyramidTalents[r].forEach(t => { if (t) talentsInTier++; });
-
-                // Count total talents in Tiers 1 through T(N-1)
-                for (let prevR = 4; prevR > r; prevR--) {
-                    pyramidTalents[prevR].forEach(t => { if (t) talentsInHigherTiers++; });
-                }
-
-                // Check each talent in the current tier against the total prerequisites
-                if (talentsInTier > 0 && talentsInHigherTiers < requiredPrereqs) {
-                    // This tier has talents, but the total prerequisites aren't met
-                    return false;
-                }
+            const selectedTalent = talents.find(t => t.name === talentName);
+            if (!selectedTalent) {
+                showModal('Error', 'Talent not found in database.');
+                return;
             }
 
-            // Also check for non-ranked duplicates (already handled in assignTalentToSlot, but a full check is safer)
-            const talentNames = pyramidTalents.flat().filter(t => t).map(t => ({ name: t.name, ranked: t.ranked }));
-            const nonRanked = talentNames.filter(t => t.ranked.toLowerCase() === 'no').map(t => t.name);
-            const hasDuplicate = nonRanked.some((name, index) => nonRanked.indexOf(name) !== index);
-            if (hasDuplicate) return false;
-            
-            return true;
+            // Assign the talent to the pending slot
+            pyramidTalents[pendingSlot.r][pendingSlot.s] = selectedTalent;
+
+            // Clear pending slot and return to builder view
+            pendingSlot = null;
+            document.getElementById('referenceContent').classList.add('hidden');
+            document.getElementById('builder').classList.remove('hidden');
+            document.getElementById('builderBtn').innerHTML = '<span data-lucide="pyramid" class="w-5 h-5 mr-2"></span>Talent Tree Builder';
+            document.getElementById('builderBtn').classList.replace('bg-gray-600', 'bg-indigo-600');
+
+            // Hide all select buttons
+            document.querySelectorAll('.select-btn').forEach(btn => btn.classList.add('hidden'));
+
+            updatePyramidUI();
+            hideModal(); // Hide the slot selected modal
         }
-
-        function showBuilder(isBuilder) {
-            document.getElementById('referenceContent').classList.toggle('hidden', isBuilder);
-            document.getElementById('builder').classList.toggle('hidden', !isBuilder);
-            document.getElementById('builderBtn').textContent = isBuilder ? 'View Full Reference' : 'Build Talent Tree';
-        }
-
-        // --- CHATBOT IMPLEMENTATION ---
-        const chatMessagesDiv = document.getElementById('chatMessages');
-        const chatInput = document.getElementById('chatInput');
-        const chatSendBtn = document.getElementById('chatSendBtn');
-        const chatbotContainer = document.getElementById('chatbotContainer');
-        const chatbotToggleBtn = document.getElementById('chatbotToggleBtn');
-
-        // Initial System Prompt (Genesys Expert)
-        let chatHistory = [
-            { role: "user", parts: [{ text: "You are an expert assistant for the Genesys tabletop roleplaying game system. You are here to answer questions about the rules, dice, mechanics, and offer talent suggestions from the user's talent tool. Keep your answers concise and directly related to Genesys, unless asked otherwise. Always use the standard model name when talking about the game." }] },
-            { role: "model", parts: [{ text: "Hello! I can help you with Genesys rules, dice results, and talent suggestions. Ask me anything about the game!" }] }
-        ];
-
-        function toggleChatbot() {
-            chatbotContainer.classList.toggle('hidden');
-            chatbotToggleBtn.textContent = chatbotContainer.classList.contains('hidden') ? 'Open Chatbot 💬' : 'Close Chatbot ❌';
-            if (!chatbotContainer.classList.contains('hidden')) {
-                chatInput.focus();
-            }
-        }
-
-        function displayMessage(text, sender) {
-            const msgDiv = document.createElement('div');
-            msgDiv.className = `chat-message p-3 rounded-xl max-w-[80%] shadow-sm text-sm`;
-            if (sender === 'user') {
-                msgDiv.classList.add('self-end', 'bg-gray-100', 'text-gray-900', 'rounded-br-none');
-            } else {
-                msgDiv.classList.add('self-start', 'bg-indigo-500', 'text-white', 'rounded-tl-none');
-            }
-            // Use innerHTML to allow for basic formatting (like **bold**)
-            msgDiv.innerHTML = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            chatMessagesDiv.appendChild(msgDiv);
-            chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
-        }
-
-        async function sendMessage() {
-            const userMessage = chatInput.value.trim();
-            if (!userMessage) return;
-
-            displayMessage(userMessage, 'user');
-            chatInput.value = '';
-            chatSendBtn.disabled = true;
-
-            // Show typing indicator
-            const indicator = document.createElement('div');
-            indicator.className = 'typing-indicator self-start bg-gray-200 text-gray-700 p-2 rounded-xl rounded-tl-none text-xs';
-            indicator.textContent = 'Assistant is thinking...';
-            chatMessagesDiv.appendChild(indicator);
-            chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
-
-            chatHistory.push({ role: "user", parts: [{ text: userMessage }] });
-            
-            // --- GEMINI API CALL (Using the correct structure) ---
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=`;
-            
-            const payload = {
-                contents: chatHistory,
-                config: {
-                    systemInstruction: {
-                        parts: [{ text: "You are an expert assistant for the Genesys tabletop roleplaying game system. You are here to answer questions about the rules, dice, mechanics, and offer talent suggestions from the user's talent tool. Keep your answers concise and directly related to Genesys, unless asked otherwise. Do not mention your API or the tool you are in." }]
-                    },
-                    // Enable Google Search for grounding in Genesys rules
-                    tools: [{ "google_search": {} }] 
-                }
-            };
-            
-            try {
-                let aiResponse = '';
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (!response.ok) {
-                    throw new Error(`API call failed: ${response.status} ${response.statusText}`);
-                }
-
-                const data = await response.json();
-                aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Sorry, I ran into an issue finding that rule. Please try a different query.';
-                
-                // --- SOURCE ATTRIBUTION (Mandatory for grounded responses) ---
-                const groundingMetadata = data.candidates?.[0]?.groundingMetadata;
-                if (groundingMetadata && groundingMetadata.groundingAttributions) {
-                    const sources = groundingMetadata.groundingAttributions.map(attr => 
-                        `<a href="${attr.web?.uri}" target="_blank" class="text-xs text-indigo-300 underline block mt-1">${attr.web?.title || 'Source'}</a>`
-                    ).join('');
-                    if (sources) {
-                        aiResponse += `<div class="mt-2 pt-2 border-t border-indigo-400">Sources: ${sources}</div>`;
-                    }
-                }
-                
-                // Remove typing indicator and display response
-                if (chatMessagesDiv.contains(indicator)) {
-                    chatMessagesDiv.removeChild(indicator);
-                }
-                displayMessage(aiResponse, 'ai');
-                
-                // Add plain text AI response to history for context
-                chatHistory.push({ role: "model", parts: [{ text: aiResponse.replace(/<[^>]*>?/gm, '') }] }); 
-
-            } catch (error) {
-                if (chatMessagesDiv.contains(indicator)) {
-                    chatMessagesDiv.removeChild(indicator);
-                }
-                console.error("Gemini API Error:", error);
-                displayMessage(`Error: Could not connect to the assistant. Check the console.`, 'ai');
-            } finally {
-                chatSendBtn.disabled = false;
-                chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
-            }
+        
+        // This function is called from the 'X' button in the pyramid slot
+        window.removeTalentFromSlot = function(r, s) {
+            pyramidTalents[r][s] = null;
+            updatePyramidUI();
         }
         
         // --- EVENT LISTENERS ---
@@ -786,23 +856,50 @@
             document.getElementById('activationFilter').value = 'all';
             document.getElementById('rankedFilter').value = 'all';
             activeTags.clear();
-            document.querySelectorAll('.tag-btn').forEach(btn => btn.classList.remove('active'));
+            buildTagBar();
             applyFilters();
         });
+
         document.getElementById('builderBtn').addEventListener('click', () => {
-            showBuilder(document.getElementById('builder').classList.contains('hidden'));
+            const builderDiv = document.getElementById('builder');
+            const referenceDiv = document.getElementById('referenceContent');
+            const button = document.getElementById('builderBtn');
+
+            if (builderDiv.classList.contains('hidden')) {
+                // Switch to builder
+                referenceDiv.classList.add('hidden');
+                builderDiv.classList.remove('hidden');
+                button.innerHTML = '<span data-lucide="book-open" class="w-5 h-5 mr-2"></span>Return to Reference';
+                button.classList.replace('bg-indigo-600', 'bg-gray-600');
+                // Ensure select buttons are hidden when returning
+                document.querySelectorAll('.select-btn').forEach(btn => btn.classList.add('hidden'));
+                pendingSlot = null;
+            } else {
+                // Switch to reference
+                builderDiv.classList.add('hidden');
+                referenceDiv.classList.remove('hidden');
+                button.innerHTML = '<span data-lucide="pyramid" class="w-5 h-5 mr-2"></span>Talent Tree Builder';
+                button.classList.replace('bg-gray-600', 'bg-indigo-600');
+            }
+            lucide.createIcons();
         });
+        
         document.getElementById('savePyramidBtn').addEventListener('click', savePyramid);
         document.getElementById('loadPyramidBtn').addEventListener('click', loadPyramid);
-        chatbotToggleBtn.addEventListener('click', toggleChatbot);
-        chatInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendMessage();
-        });
-        chatSendBtn.addEventListener('click', sendMessage);
-
-        // Initial load
-        window.onload = loadTalents;
         
+        document.getElementById('chatbotToggleBtn').addEventListener('click', () => {
+            document.getElementById('chatbotContainer').classList.toggle('hidden');
+        });
+        
+        // --- INITIALIZATION ---
+        function initializeAppLogic() {
+            loadTalents();
+            lucide.createIcons();
+            // Render initial chat messages (from chatHistory) after the rest of the page loads
+            chatHistory.forEach(msg => appendMessage(msg.role, msg.parts[0].text));
+        }
+
+        window.onload = initializeAppLogic;
     </script>
 </body>
 </html>
